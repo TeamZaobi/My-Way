@@ -1,0 +1,101 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://my-way.dev/runtime/bridge/reflection-triage-audit.schema.json",
+  "title": "My-Way Reflection Triage Audit Record",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "audit_id",
+    "turn_id",
+    "packet_id",
+    "timestamp",
+    "material_source",
+    "layer",
+    "decision",
+    "reason",
+    "follow_up_owner",
+    "evidence_refs",
+    "replay_refs"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string"
+    },
+    "audit_id": {
+      "type": "string"
+    },
+    "turn_id": {
+      "type": "string"
+    },
+    "packet_id": {
+      "type": "string"
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "material_source": {
+      "type": "string",
+      "enum": [
+        "reference-system",
+        "my-way"
+      ]
+    },
+    "layer": {
+      "type": "string",
+      "enum": [
+        "worldview",
+        "workflow",
+        "guardrail",
+        "implementation"
+      ]
+    },
+    "decision": {
+      "type": "string",
+      "enum": [
+        "adopt",
+        "diverge",
+        "upstream-candidate",
+        "bypass"
+      ]
+    },
+    "reason": {
+      "type": "string"
+    },
+    "follow_up_owner": {
+      "type": "string",
+      "enum": [
+        "my-way",
+        "governance-owner",
+        "lifecycle-owner"
+      ]
+    },
+    "evidence_refs": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "minItems": 1
+    },
+    "replay_refs": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "minItems": 1
+    },
+    "review_required": {
+      "type": "boolean"
+    },
+    "review_status": {
+      "type": "string",
+      "enum": [
+        "not-needed",
+        "pending",
+        "approved",
+        "rejected"
+      ]
+    }
+  },
+  "additionalProperties": false
+}

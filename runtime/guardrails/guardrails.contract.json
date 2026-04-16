@@ -1,0 +1,31 @@
+{
+  "schema_version": "v0.1",
+  "dedupe_window_size": 12,
+  "loop_block_threshold": 3,
+  "recursion_block_threshold": 2,
+  "cooldown_turns": 1,
+  "cooldown_seconds": 120,
+  "protected_path_patterns": [
+    "*/SKILL.md",
+    "*/references/*",
+    "*/runtime/schemas/*"
+  ],
+  "blocked_mutation_path_patterns": [],
+  "allowed_mutation_path_prefixes": [],
+  "blocked_source_tags": [
+    "my-way-reflection-replay"
+  ],
+  "review_required_impacts": [
+    "high"
+  ],
+  "review_required_action_kinds": [
+    "mutation",
+    "sync",
+    "upstream-sync"
+  ],
+  "owner_precedence": [
+    "governance-owner",
+    "lifecycle-owner",
+    "my-way"
+  ]
+}

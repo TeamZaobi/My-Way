@@ -1,0 +1,94 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://my-way.dev/runtime/schemas/turn-event.schema.json",
+  "title": "My-Way Turn Event",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "event_id",
+    "turn_id",
+    "timestamp",
+    "host_id",
+    "mode",
+    "phase",
+    "source",
+    "payload_summary"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string"
+    },
+    "event_id": {
+      "type": "string"
+    },
+    "turn_id": {
+      "type": "string"
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "host_id": {
+      "type": "string",
+      "enum": [
+        "codex",
+        "claude-code",
+        "antigravity",
+        "other"
+      ]
+    },
+    "mode": {
+      "type": "string",
+      "enum": [
+        "prompt-only",
+        "hook-enhanced",
+        "fusion-enabled"
+      ]
+    },
+    "phase": {
+      "type": "string",
+      "enum": [
+        "turn_start",
+        "prelude",
+        "execute",
+        "postlude",
+        "fusion_review",
+        "handoff"
+      ]
+    },
+    "source": {
+      "type": "string",
+      "enum": [
+        "user",
+        "host",
+        "my-way",
+        "reference-system"
+      ]
+    },
+    "payload_summary": {
+      "type": "string"
+    },
+    "related_paths": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": []
+    },
+    "confidence": {
+      "type": "string",
+      "enum": [
+        "low",
+        "medium",
+        "high"
+      ]
+    },
+    "source_tag": {
+      "type": "string"
+    },
+    "event_hash": {
+      "type": "string"
+    }
+  },
+  "additionalProperties": false
+}

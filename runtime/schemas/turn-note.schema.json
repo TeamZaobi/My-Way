@@ -1,0 +1,61 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://my-way.dev/runtime/schemas/turn-note.schema.json",
+  "title": "My-Way Turn Note",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "note_id",
+    "turn_id",
+    "scope",
+    "goal",
+    "actions",
+    "result",
+    "retention"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string"
+    },
+    "note_id": {
+      "type": "string"
+    },
+    "turn_id": {
+      "type": "string"
+    },
+    "scope": {
+      "type": "string",
+      "enum": [
+        "session",
+        "project",
+        "global-candidate"
+      ]
+    },
+    "goal": {
+      "type": "string"
+    },
+    "actions": {
+      "type": "string"
+    },
+    "result": {
+      "type": "string"
+    },
+    "candidate_points": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "maxItems": 3,
+      "default": []
+    },
+    "retention": {
+      "type": "string",
+      "enum": [
+        "short",
+        "medium",
+        "review-required"
+      ]
+    }
+  },
+  "additionalProperties": false
+}

@@ -1,0 +1,89 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://my-way.dev/runtime/schemas/reflection-exchange-packet.schema.json",
+  "title": "My-Way Reflection Exchange Packet",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "packet_id",
+    "source_system",
+    "target_system",
+    "material_type",
+    "layer",
+    "summary",
+    "evidence",
+    "candidate_action"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string"
+    },
+    "packet_id": {
+      "type": "string"
+    },
+    "source_system": {
+      "type": "string",
+      "enum": [
+        "reference-system",
+        "my-way"
+      ]
+    },
+    "target_system": {
+      "type": "string",
+      "enum": [
+        "my-way",
+        "reference-system"
+      ]
+    },
+    "material_type": {
+      "type": "string",
+      "enum": [
+        "note",
+        "pattern",
+        "workflow",
+        "guardrail",
+        "memory",
+        "skill_candidate"
+      ]
+    },
+    "layer": {
+      "type": "string",
+      "enum": [
+        "worldview",
+        "workflow",
+        "guardrail",
+        "implementation"
+      ]
+    },
+    "summary": {
+      "type": "string"
+    },
+    "evidence": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "minItems": 1
+    },
+    "candidate_action": {
+      "type": "string",
+      "enum": [
+        "adopt",
+        "diverge",
+        "upstream-candidate"
+      ]
+    },
+    "local_decision_reason": {
+      "type": "string"
+    },
+    "follow_up_owner": {
+      "type": "string",
+      "enum": [
+        "my-way",
+        "governance-owner",
+        "lifecycle-owner"
+      ]
+    }
+  },
+  "additionalProperties": false
+}

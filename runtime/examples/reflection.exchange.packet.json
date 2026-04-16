@@ -1,0 +1,17 @@
+{
+  "schema_version": "v0.1",
+  "packet_id": "packet_2026_04_17_001",
+  "source_system": "my-way",
+  "target_system": "reference-system",
+  "material_type": "workflow",
+  "layer": "implementation",
+  "summary": "My-Way now exposes a portable companion scaffold with separate event, note, bridge, and guardrail layers.",
+  "evidence": [
+    "runtime/README.md defines truth layering and artifact boundaries",
+    "runtime/schemas/*.schema.json freeze event, note, and reflection packet fields",
+    "scripts/*.py validate and smoke-test the scaffold"
+  ],
+  "candidate_action": "upstream-candidate",
+  "local_decision_reason": "The public scaffold is stable enough to share as a portable reference without exporting any private memory or routing details.",
+  "follow_up_owner": "lifecycle-owner"
+}
