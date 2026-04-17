@@ -2,7 +2,9 @@
 
 This directory provides ready-to-copy repository entry files for file-based AI-native hosts.
 
-Use these files as bootstrap adapters, not as alternate product truth. Keep them short and stable. The full product contract still lives in `../SKILL.md`, `../references/requirements-spec.md`, and `../references/migration-host-model.md`.
+The repository root now ships the same thin entry files directly. Keep the copies here for downstream repositories and host-native settings.
+
+Use these files as bootstrap loaders, not as alternate product truth. The full product contract still lives in `../SKILL.md`, `../references/requirements-spec.md`, and `../references/migration-host-model.md`.
 
 ## File Matrix
 
@@ -18,7 +20,7 @@ Use these files as bootstrap adapters, not as alternate product truth. Keep them
 ## Usage Rules
 
 1. Copy the matching file to the repository root used by the target host.
-2. Keep the entry file minimal: host activation, `Prelude` guardrails, routing boundary, and `Postlude` rule only.
+2. Keep the entry file minimal: default-load `SKILL.md`, and do not silently rewrite the user's intent.
 3. Point any deeper semantics back to `SKILL.md` and the reference docs instead of duplicating them inline.
 4. If multiple tools share the same repository, it is acceptable to keep more than one entry file at the root as long as they carry the same public contract.
 5. If a host has no file-based repository entrypoint, port `GENERIC-HOST.md` into its host-native project instruction mechanism.

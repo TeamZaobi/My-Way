@@ -97,6 +97,7 @@ Without it, a system usually drifts into one of two bad states:
 
 ## What This Public Surface Includes
 
+- thin root entry files for file-based hosts
 - the portable turn contract
 - public terminology
 - host capability model
@@ -124,6 +125,9 @@ They are boundary decisions, not missing documentation.
 
 ```text
 public-surface/
+├── AGENTS.md
+├── CLAUDE.md
+├── GEMINI.md
 ├── README.md
 ├── SKILL.md
 ├── entry-rules/
