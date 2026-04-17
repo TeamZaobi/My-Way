@@ -1,147 +1,143 @@
-# My-Way System Architecture v0.1
+# My-Way System Architecture v0.2
 
-## 1. 架构目标
+## 1. Architecture Goal
 
-`My-Way` 要成为一个跨宿主、始终触发的 companion meta-skill，但不膨胀成新的 agent runtime。
+`My-Way` must behave like one product across hosts while exposing a public surface that can be adopted without access to private overlays.
 
-架构目标只有五个：
+The architecture therefore optimizes for five properties:
 
-1. 跨宿主保持同一套 turn 语义
-2. 每轮稳定执行 `Prelude + Postlude`
-3. 事件和笔记分层，不混长期记忆
-4. 与外部反思来源做可审计的三态融合判断
-5. 在任何混合问题上维持单写口
+1. one portable turn contract across hosts
+2. deterministic `Prelude + Postlude` behavior when host signals allow it
+3. append-only operational artifacts with low-noise human summaries
+4. explicit routing to governance and lifecycle authorities
+5. reviewable exchange with external reference sources without leaking private state
 
-## 2. 架构总览
+## 2. Product Layering
+
+The public surface is a projection layer, not a full source mirror.
 
 ```text
-Host signals
+Host tool
   -> Host adapter
-  -> My-Way core state machine
-  -> Event layer
-  -> Notes layer
-  -> Reflection bridge
-  -> Routing / handoff
+  -> Companion core
+  -> Public artifacts
+  -> Authority routing
+  -> Optional review exchange
+
+Private overlays, if they exist, stay outside this public directory.
+They may consume or project the same public contract, but they are not required
+to understand or adopt the product from public.
 ```
 
-## 3. 分层说明
+Within a public repository, this directory is authoritative for the public contract. It is not authoritative for private implementation details that are intentionally omitted.
 
-### 3.1 Host adapter
+## 3. Runtime Components
 
-负责把不同宿主的生命周期信号转换成统一 turn event。
+### 3.1 Host Adapter
 
-职责：
+Purpose:
 
-- 识别用户输入开始
-- 识别宿主执行中间结果
-- 识别回合结束
-- 标注宿主来源和能力级别
+- translate host-specific lifecycle signals into a portable turn model
+- report host capability level
+- preserve host-specific integration details at the edge
 
-不负责：
+The host adapter does not own governance, lifecycle, or review policy.
 
-- 记忆判断
-- 反思融合
-- 项目治理
-- skill 生命周期同步
+### 3.2 Companion Core
 
-### 3.2 My-Way core
+Purpose:
 
-`My-Way core` 只负责一条确定性的 turn state machine：
+- derive the `Prelude` outcome
+- maintain the turn state machine
+- emit the short `Postlude` carry-forward note when warranted
+- decide whether review triage is needed
 
-`idle -> prelude -> execute -> postlude -> fusion-review -> idle`
+The companion core is the public behavior center of `My-Way`.
 
-职责：
+### 3.3 Public Artifact Layer
 
-- 生成轻量 `Prelude`
-- 决定 `rewrite-light / bypass / observe-only`
-- 生成短 `Postlude`
-- 判断本轮是否值得进入融合复盘
+Purpose:
 
-### 3.3 Event layer
+- persist append-only turn facts
+- persist at most one short note per turn
+- expose reviewable artifacts to tooling and validators
 
-事件层保存最小事实，要求 append-only。
+The artifact layer is operational. It is not a personal memory subsystem.
 
-作用：
+### 3.4 Authority Routing
 
-- 保存发生过什么
-- 供回合笔记和融合判断回看
-- 避免 observation 与 curated note 混层
+Purpose:
 
-### 3.4 Notes layer
+- route source-of-truth and boundary issues to `governance-authority`
+- route projection, synchronization, and distribution issues to `lifecycle-authority`
+- keep the companion layer focused on turn behavior
 
-只保存人能读的简短回合笔记。
+### 3.5 Review Exchange
 
-作用：
+Purpose:
 
-- 帮助下一轮恢复上下文
-- 给人提供可读总结
-- 控制噪声，不做无限增长的全量日志
+- accept structured material from an external reference source
+- emit `adopt`, `diverge`, or `upstream-candidate`
+- keep review exchange auditable and bounded
 
-### 3.5 Reflection bridge
+The review exchange layer does not directly mutate private systems.
 
-只交换“可思考的融合材料”。
+## 4. Turn State Machine
 
-职责：
+The public state machine is intentionally small:
 
-- 接收外部反思来源导出的变化材料
-- 接收 `My-Way` 本地产出的稳定候选
-- 输出 `adopt / diverge / upstream-candidate`
+```text
+idle -> prelude -> execute -> postlude -> review -> idle
+```
 
-不负责：
-
-- 直接修改外部系统
-- 直接修改公共 skill
-
-### 3.6 Routing / handoff
-
-保持单写口。
-
-- 治理问题 -> `governance-owner`
-- 生命周期 / 同步执行问题 -> `lifecycle-owner`
-- `My-Way` 只负责伴随、笔记、融合判断
-
-## 4. 宿主模式
-
-### 4.1 Prompt-only
-
-- 无 hook
-- best-effort 模式
-- 只保证轻量前后处理
-
-### 4.2 Hook-enhanced
-
-- 宿主能提供开始、执行、结束等信号
-- `Prelude + Postlude` 更稳定
-
-### 4.3 Fusion-enabled
-
-- 在 `Hook-enhanced` 之上，具备外部反思交换材料输入
-- 才进入正式融合回路
-
-## 5. Turn state machine
-
-### 5.1 状态
+### 4.1 State Semantics
 
 - `idle`
+  - waiting for a new turn
 - `prelude`
+  - choose `rewrite-light`, `bypass`, or `observe-only`
 - `execute`
+  - the host performs the main task
 - `postlude`
-- `fusion-review`
+  - emit a short carry-forward note if warranted
+- `review`
+  - inspect durable material and produce a triage decision if needed
 
-### 5.2 转移
+### 4.2 Transition Rules
 
 - `idle -> prelude`
-  - 接收到新 turn
+  - a new user turn or equivalent host trigger arrives
 - `prelude -> execute`
-  - 生成 `rewrite-light / bypass / observe-only`
+  - the host receives the chosen pre-execution framing
 - `execute -> postlude`
-  - 宿主或 IDE 返回本轮结果
-- `postlude -> fusion-review`
-  - 本轮出现值得沉淀或对照外部反思来源的材料
-- `fusion-review -> idle`
-  - 记录 triage 结果后结束
+  - the host finishes the turn or returns a stable result
+- `postlude -> review`
+  - durable material surfaced and qualifies for review exchange
+- `review -> idle`
+  - triage is recorded and the turn is closed
 
-## 6. Turn event schema
+## 5. Host Capability Modes
+
+### 5.1 Prompt-only
+
+- no stable lifecycle hooks
+- best-effort companion behavior only
+
+### 5.2 Hook-enhanced
+
+- host emits reliable start, execute, and end signals
+- `Prelude + Postlude` can be enforced consistently
+
+### 5.3 Fusion-enabled
+
+- host also supports structured review exchange
+- external reference material becomes part of the supported lifecycle
+
+## 6. Public Artifact Contracts
+
+The examples below describe the public semantics. Some bundled runtime examples may still use older transport labels for compatibility.
+
+### 6.1 Turn Event
 
 ```yaml
 turn_event:
@@ -150,7 +146,7 @@ turn_event:
   timestamp: iso-8601
   host_id: codex | claude-code | antigravity | other
   mode: prompt-only | hook-enhanced | fusion-enabled
-  phase: turn_start | prelude | execute | postlude | fusion_review | handoff
+  phase: turn_start | prelude | execute | postlude | review | handoff
   source: user | host | my-way | reference-system
   payload_summary: string
   related_paths?: [string]
@@ -159,19 +155,19 @@ turn_event:
   event_hash?: string
 ```
 
-规则：
+Rules:
 
 - append-only
-- 允许最小 payload summary，不强求全量原始内容
-- `event_hash` 用于去重
+- minimal factual summary is preferred over full payload dumps
+- `event_hash` may be used for de-duplication
 
-## 7. Note schema
+### 6.2 Carry-Forward Note
 
 ```yaml
 turn_note:
   note_id: string
   turn_id: string
-  scope: session | project | global-candidate
+  scope: session | project | cross-host-candidate
   goal: string
   actions: string
   result: string
@@ -179,82 +175,86 @@ turn_note:
   retention: short | medium | review-required
 ```
 
-规则：
+Rules:
 
-- 每轮最多一条短笔记
-- 默认先落 `session`
-- 只有重复出现或明确重要时才提升到 `project`
-- 不直接写 `global`
+- at most one short note per turn
+- default scope is `session`
+- promotion requires repeated value or explicit review need
+- a note is a human-readable summary, not hidden user memory
 
-## 8. Reflection exchange packet
+Compatibility note:
+
+- some existing examples may serialize `cross-host-candidate` as `global-candidate`
+- the public meaning is "candidate for wider review", not "global memory"
+
+### 6.3 Review Exchange Packet
 
 ```yaml
-reflection_exchange_packet:
+review_exchange_packet:
   packet_id: string
   source_system: reference-system | my-way
   target_system: my-way | reference-system
-  material_type: note | pattern | workflow | guardrail | memory | skill_candidate
+  material_type: note | pattern | workflow | guardrail | carry-forward-context | skill-candidate
   layer: worldview | workflow | guardrail | implementation
   summary: string
   evidence: [string]
   candidate_action: adopt | diverge | upstream-candidate
   local_decision_reason?: string
-  follow_up_owner?: my-way | governance-owner | lifecycle-owner
+  follow_up_authority?: companion-core | governance-authority | lifecycle-authority
 ```
 
-## 9. 所有权与转交
+Rules:
 
-| 问题类型 | Primary owner | My-Way 动作 |
+- exchange reviewable material only
+- do not ship private live state through this packet
+- `v0` triage is decision support, not automatic bilateral mutation
+
+Compatibility note:
+
+- some bundled examples may still encode `carry-forward-context` as `memory`
+- some bundled examples may still encode `follow_up_authority` with `*_owner` labels
+- those labels are transport compatibility, not the preferred public vocabulary
+
+## 7. Authority Routing
+
+| Issue type | Primary authority | Companion behavior |
 |---|---|---|
-| 回合前置整理、回合后笔记 | `my-way` | 主责 |
-| 项目真源、写权、治理边界 | `governance-owner` | 观察、转交、补笔记 |
-| skill live asset、同步执行、投影、分发 | `lifecycle-owner` | 观察、转交、补笔记 |
-| 外部反思内容 triage | `my-way` | 主责 |
-| triage 后需资产同步 | `lifecycle-owner` | 接收提案 |
-| triage 后影响治理边界 | `governance-owner` | 接收提案 |
+| prelude and postlude behavior | `companion-core` | primary |
+| source of truth, write scope, repository boundary | `governance-authority` | observe, route, add context |
+| projection, sync, distribution, live-install lifecycle | `lifecycle-authority` | observe, route, add context |
+| review of external reference material | `companion-core` | primary |
+| review outcome that requires public or private projection work | `lifecycle-authority` | receive proposal |
+| review outcome that changes repository boundary or truth policy | `governance-authority` | receive proposal |
 
-## 10. 护栏
+## 8. Guardrails
 
-### 10.1 Intent drift
+- `intent safety`
+  - `Prelude` may clarify, compress, or pass through; it may not change user intent
+- `noise control`
+  - facts and notes stay separate; notes stay short
+- `routing discipline`
+  - mixed issues must resolve to one primary authority
+- `review containment`
+  - review exchange is bounded and auditable
+- `migration discipline`
+  - public adoption must not depend on reconstructing omitted private material
 
-- `Prelude` 只允许轻量整理
-- 允许 `bypass / observe-only`
-
-### 10.2 Recursion
-
-- 用 `turn_id`
-- 用 `source_tag`
-- 用 `cooldown`
-- 用 `event_hash`
-
-### 10.3 Noise control
-
-- 每轮一条短笔记
-- 不做全局长日志
-- observation 与 note 分层
-
-### 10.4 Mutation control
-
-- `v0` 只做 triage
-- 高影响动作默认 review gate
-
-## 11. 演进路线
+## 9. Evolution Path
 
 ### v0
 
-- turn state machine
-- turn event schema
-- short note schema
-- reflection exchange packet
-- owner routing
+- public turn state machine
+- public artifact contracts
+- authority routing
+- review triage
 
 ### v1
 
-- 分层记忆
-- retrieval-before-action
-- confidence / pruning / self-validation
+- stronger validation across host adapters
+- promotion and pruning rules for carry-forward notes
+- richer review evidence handling
 
 ### v2
 
-- 外部验证面
-- 离线实验分支
+- optional external verification surfaces
+- host capability comparison and migration tooling

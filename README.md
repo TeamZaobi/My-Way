@@ -1,29 +1,65 @@
-# My-Way
+# My-Way Public Surface
 
-`My-Way` 是一个公开的、可移植的 `always-on companion meta-skill` 骨架。
-它服务于 `Codex`、`Claude Code`、`AntiGravity` 等 AI-Native 开发宿主环境，用最小运行合同把下面几件事稳定下来：
+`My-Way` in this directory is the public projection of the same product and the public migration substrate used to adopt it in host tools.
 
-- 每轮轻量 `Prelude`
-- 每轮简短 `Postlude`
-- append-only 事件层与短笔记层
-- 与外部反思来源的可审计 triage
-- 低噪声、可验证的 guardrails
+It is designed to be carried by a public repository directly. The directory exposes the portable contract of the product: the turn model, host capability model, routing rules, schemas, examples, and validation entrypoints that a host integration can rely on without access to any private workspace.
 
-这个公开版只保留架构和技术实现。
-它不包含个人记忆、私有路由命名、真实运行状态、宿主密钥或任何个性化配置。
+It is intentionally not a full source restore. It does not attempt to reconstruct private operators, internal state stores, personalized carry-forward context, unpublished integrations, or internal release mechanics.
 
-## 仓库边界
+## Origin Snapshot
 
-- 公开版保留：协议、schema、样例、验证脚本、smoke、宿主适配说明
-- 公开版去掉：个人工作流命名、私有 owner 体系、真实记忆和内部系统直连
-- 运行时可变状态默认不应直接提交回仓库
+- This project began as a practical wish: keep one companion across AI-native hosts without turning private working state into the public contract.
+- The public repo exists to explain the method, the boundary, and the portable contract, not to reconstruct the private working state behind it.
+- Early design questions were about branches versus scaffolding, private source versus public projection, and how to keep the public side useful without leaking the private side.
 
-## 目录结构
+## Keywords
+
+- `always-on companion`
+- `public projection`
+- `private overlay`
+- `public migration substrate`
+- `Prelude`
+- `Postlude`
+- `Prompt-only`
+- `Hook-enhanced`
+- `Fusion-enabled`
+- `governance-authority`
+- `lifecycle-authority`
+- `entry-rules`
+- `cross-host-candidate`
+
+## Product Position
+
+- `Same product`
+  - This public surface is not a fork, demo, or alternate edition. It is the public-facing projection of the same companion product.
+- `Public projection`
+  - Only the portable contract is published: host-facing behavior, artifact shapes, validation, and migration guidance.
+- `Public migration substrate`
+  - Public adopters can start from this directory and move a host from prompt-only use toward deeper lifecycle integration without learning any private naming system.
+
+## Boundary Guarantees
+
+- Included: portable protocol, public terminology, schemas, examples, validation scripts, and host adapter guidance
+- Included: ready-to-copy host entry-rule examples for `AGENTS.md`, `CLAUDE.md`, and `GEMINI.md`
+- Excluded: private owner names, personalized memory semantics, internal routing conventions, secrets, live runtime state, and private source-only implementation details
+- The documents in this directory are authoritative for the public contract inside a public repository
+- Missing private pieces are intentionally omitted, not invitations to reverse-engineer the private source
+
+## Directory Map
 
 ```text
-My-Way/
+public-surface/
+├── README.md
 ├── SKILL.md
+├── entry-rules/
+│   ├── README.md
+│   ├── AGENTS.md
+│   ├── CLAUDE.md
+│   ├── GEMINI.md
+│   └── GENERIC-HOST.md
 ├── references/
+│   ├── origin-methodology-keywords.md
+│   ├── migration-host-model.md
 │   ├── requirements-spec.md
 │   ├── system-architecture.md
 │   └── turn-templates.md
@@ -37,22 +73,22 @@ My-Way/
 └── scripts/
 ```
 
-## 公开版 owner 模型
+## Read Order
 
-为避免把私有工作流命名当成公共接口，这里只保留 3 个通用 owner：
+1. `README.md`
+2. `SKILL.md`
+3. `references/origin-methodology-keywords.md`
+4. `entry-rules/README.md`
+5. `references/migration-host-model.md`
+6. `references/requirements-spec.md`
+7. `references/system-architecture.md`
+8. `runtime/README.md`
 
-- `my-way`
-  - companion 本体
-- `governance-owner`
-  - 项目治理、真源、写权和范围边界
-- `lifecycle-owner`
-  - skill/agent 生命周期、同步执行、发布和分发
-
-## 快速验证
+## Validation
 
 ```bash
 python scripts/myway_validate.py bundle
 python scripts/myway_smoke.py
 ```
 
-如果你要把它接到真实宿主里，先从 `Prompt-only` 跑通，再逐步接入 `Hook-enhanced` 和 `Fusion-enabled`。
+Run validation after changing public documentation, schemas, or host adapters so the public projection stays coherent.

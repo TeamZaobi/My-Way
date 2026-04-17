@@ -3,9 +3,11 @@
 这个目录承载 `My-Way v0` 的最小运行骨架。
 它的目标不是把 `My-Way` 变成新的 agent runtime，而是把“常驻 companion 的最小机读合同”从纯文字说明里拆出来，方便后续接 hooks、脚本或宿主适配层。
 
-## 1. 真源分层
+## 1. 公开合同分层
 
-`My-Way` 的真源分层固定如下：
+这个目录只定义公开投影内部的合同分层，不宣称覆盖任何非公开部署面的完整实现。
+
+`My-Way` 的公开合同分层固定如下：
 
 1. `SKILL.md`
    - companion 行为合同
@@ -58,7 +60,7 @@
 - 默认运行模式
 - 可观察信号如何映射到 `Prelude / Execute / Postlude / Fusion`
 - 何时必须降级到 `Prompt-only`
-- 何时必须转交 `governance-owner` / `lifecycle-owner`
+- 何时必须转交 `governance-authority` / `lifecycle-authority`
 
 ### 3.3 `examples/`
 
@@ -121,6 +123,11 @@
 - `hosts/` 不得发明新的核心 owner
 - `examples/` 不得引入 schema 之外的字段漂移
 - reflection triage 在 `v0` 仍然只有 `adopt / diverge / upstream-candidate`
+
+兼容说明：
+
+- serialized examples 和 schema 中仍可能保留 `governance-owner`、`lifecycle-owner`、`global-candidate` 等兼容标签
+- 对外文档语义以 `governance-authority`、`lifecycle-authority`、`cross-host candidate` 为准
 
 ## 5. 接入顺序
 

@@ -49,9 +49,14 @@ triage 只输出一条 audit record，最小字段包括：
 - `decision = upstream-candidate`
   - 只形成候选，不自动 mutation
 - 涉及治理边界
-  - 转 `governance-owner`
+  - 转 `governance-authority`
 - 涉及 live asset、同步执行、分发
-  - 转 `lifecycle-owner`
+  - 转 `lifecycle-authority`
+
+兼容说明：
+
+- schema 和样例里仍可能出现 `*_owner` 作为 transport label
+- 对外解释一律按 `*_authority` 理解，不把它们当作私有组织结构外露
 
 ## 5. 去重与回放
 

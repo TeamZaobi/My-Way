@@ -1,134 +1,97 @@
 ---
 name: my-way
-description: 面向 Codex、Claude Code、AntiGravity 等 AI-Native 开发宿主环境的常驻 companion meta-skill 骨架。负责轻量 Prelude、简短 Postlude、紧凑笔记、低噪声反思 triage，以及向治理 owner 和生命周期 owner 的单写口转交。
+description: Portable companion meta-skill surface for Codex, Claude Code, AntiGravity, and similar AI-native hosts. Defines a minimal Prelude/Postlude contract, public routing rules, and migration guidance without exposing private overlays.
 ---
 
 # My-Way
 
-`My-Way` 是一个始终触发的轻量 companion meta-skill 骨架，服务 `Codex`、`Claude Code`、`AntiGravity` 等 AI-Native 开发宿主环境。
-它不是普通业务 skill，也不是新的 agent runtime。
+`My-Way` is a portable companion meta-skill surface for Codex, Claude Code, AntiGravity, and similar AI-native hosts. This file describes the host-facing contract of the same product in a form that a public repository can carry directly.
 
-## 什么时候启用
+It is not a private source mirror. It does not expose personalized carry-forward state, private operator naming, unpublished connectors, or internal release workflows.
 
-- 只要进入支持 `My-Way` 的宿主环境，就默认启用
-- 不要求用户显式点名
-- `always-on` 在工程上被定义为“宿主级集成契约”，不是单靠 `SKILL.md` 自动常驻
+## When To Use It
 
-## 核心定位
+- Enable `My-Way` when a host wants lightweight per-turn companion behavior around an existing execution loop
+- Use this public surface when documenting, integrating, validating, or migrating the product in public
+- Start in `Prompt-only` mode if the host has no stable hooks, then migrate upward only when the host can support richer lifecycle signals
 
-- `My-Way` 是一个可移植的 companion 架构，不与任何单一私有系统强绑定
-- 主职责是每轮做轻量 `Prelude + Postlude`
-- 它只负责伴随、整理、留痕、融合判断，不接管项目治理和 skill 生命周期
+## Public Contract
 
-## 不可妥协约束
+`My-Way` does five things in public:
 
-- 不得静默改写用户真实意图
-- 必须支持 `rewrite-light / bypass / observe-only`
-- 默认只做 `proposal before mutation`
-- 必须遵守单写口：治理判断让位给 `governance-owner`，skill 生命周期和同步执行让位给 `lifecycle-owner`
-- 每轮最多一条短笔记，默认只落 `session`
-- 不制造额外仪式感，不把每轮都扩成分析报告
+- derives one minimal `Prelude` decision before execution
+- leaves at most one short `Postlude` carry-forward note after execution
+- records append-only turn facts separately from human-readable notes
+- routes governance and lifecycle issues to the correct authority instead of absorbing them into the companion layer
+- accepts optional review material from an external reference source without assuming private system access
 
-## 默认回合协议
+## What It Does Not Do
 
-每轮按下面的顺序工作：
+- mirror a private repository or recover omitted private files
+- claim personal memory, identity storage, or hidden user profile semantics
+- own project governance, source-of-truth decisions, or packaging and distribution policy
+- require unpublished host hooks or internal control planes
 
-1. 识别这轮真实目标、硬约束和主导 owner
-2. 产出一个最小 `Prelude` 决策
-3. 让宿主执行主任务
-4. 在回合结束后补一条短 `Postlude`
-5. 只有出现稳定新模式或外部反思材料时，才进入 `fusion-review`
+## Turn Contract
 
-### 1. Prelude 决策
+Every turn follows the same public sequence:
 
-`Prelude` 只允许三种结果：
+1. Identify the user goal, hard constraints, and active authority boundary.
+2. Produce one minimal `Prelude` outcome.
+3. Let the host execute the main task.
+4. Append one short `Postlude` note if a note is warranted.
+5. Optionally run review triage if durable material surfaced.
+
+`Prelude` allows only three outcomes:
 
 - `rewrite-light`
-  - 用户原话存在冗余、歧义、跨工具隐含约束，或需要补出执行边界时使用
+  - compress wording or expose execution constraints without changing the user's intent
 - `bypass`
-  - 用户原话已经足够清楚，直接透传更安全时使用
+  - pass the request through unchanged when direct execution is safer
 - `observe-only`
-  - 这轮不适合干预执行表述，只做观察和笔记时使用
+  - do not rewrite; only observe and optionally leave a short note
 
-`rewrite-light` 只允许做三件事：
+`rewrite-light` must never:
 
-- 压缩冗余，保留原意
-- 补齐执行约束，避免宿主误解
-- 明确这轮由谁主导：宿主、`governance-owner`、`lifecycle-owner`，还是 `My-Way` 只做伴随
+- expand the task into a different task
+- change user intent
+- pre-empt governance or lifecycle decisions that belong elsewhere
+- add visible ritual that distracts from the host's main job
 
-`Prelude` 禁止做的事：
+## Routing Model
 
-- 扩写成新的任务
-- 改写用户目标
-- 提前替用户做治理或同步决策
-- 把 companion 逻辑变成对用户可见的流程噪声
+The public surface uses three generic authority classes:
 
-### 2. Handoff 与 owner 规则
+- `companion-core`
+  - turn shaping, short notes, and review triage
+- `governance-authority`
+  - source of truth, write scope, boundary, and repository governance
+- `lifecycle-authority`
+  - packaging, projection, synchronization, distribution, and live-install lifecycle work
 
-以下情况应立即切换为转交判断：
+`My-Way` may identify and hand off to the right authority, but it does not absorb their responsibilities.
 
-- 项目真源、写权、治理边界、作用域漂移
-  - Primary owner: `governance-owner`
-- skill 或 agent 的 live asset、upstream、同步执行、投影、分发
-  - Primary owner: `lifecycle-owner`
-- 外部反思材料是否值得吸收、保留分歧还是形成候选回流
-  - Primary owner: `My-Way`
-
-`My-Way` 的责任是识别 owner、补充上下文、留下短笔记，不替代主 owner 执行其治理权。
-
-### 3. Postlude 规则
-
-`Postlude` 默认只留下四类信息：
-
-- 这轮目标
-- 实际动作
-- 当前结果
-- 值得后续沉淀或融合的候选点
-
-停止条件：
-
-- 能用一条短笔记说清，就不继续扩写
-- 没有稳定新模式，就不升级到 `project`
-- 没有跨宿主或外部反思价值，就不进入 `global-candidate`
-
-### 4. Reflection triage
-
-公开版里的外部反思来源统一称为 `reference-system`。
-它是高优先级参照体，但不是绝对真源。
-`My-Way` 与 `reference-system` 的默认关系不是硬同步，不是目录覆盖，不是状态镜像。
-
-只有满足下面任一条件，才触发 reflection triage：
-
-- 外部反思来源出现新的 companion / workflow / guardrail 材料
-- `My-Way` 在多个项目或多个宿主下长出稳定模式
-- 本轮产生了 guardrail、workflow、companion contract 级变化
-
-`v0` 只输出三态结论：
-
-- `adopt`
-- `diverge`
-- `upstream-candidate`
-
-`v0` 不直接执行双向改写。
-
-## 宿主模式
+## Host Capability Modes
 
 - `Prompt-only`
-  - 没有显式 hook 时，只做 best-effort 的轻量前后处理
+  - best-effort front and back processing with no stable lifecycle hooks
 - `Hook-enhanced`
-  - 宿主能提供回合开始、工具返回、回合结束等信号时，执行稳定的 `Prelude + Postlude`
+  - the host provides start, execute, and end signals so `Prelude + Postlude` becomes reliable
 - `Fusion-enabled`
-  - 在 `Hook-enhanced` 之上，具备外部反思交换材料输入时，才进入正式融合判断
+  - the host can also accept structured review material from an external reference source
 
-## Fallback 约定
+## Terminology Guardrail
 
-- 没有 hook 时，不伪造事件，只基于当前对话做最小判断
-- 宿主无法稳定写笔记时，允许只保留轻量 summary
-- 无法确认 owner 时，先维持 `My-Way` 伴随角色，不越权替 `governance-owner` 或 `lifecycle-owner` 决策
+In this public surface, a note is a short carry-forward summary for later review. It is not a claim of personal memory or a hidden user model.
 
-## 模板与参考
+Some bundled examples may still use older transport labels such as `global-candidate`, `memory`, or `*_owner`. Interpret them as compatibility encodings for wider review scope, carry-forward context material, and routing labels rather than literal public product language.
 
-- 运行骨架：[runtime/README.md](./runtime/README.md)
-- 输出模板：[turn-templates.md](./references/turn-templates.md)
-- 需求规格：[requirements-spec.md](./references/requirements-spec.md)
-- 系统架构：[system-architecture.md](./references/system-architecture.md)
+## References
+
+- Runtime bundle: [runtime/README.md](./runtime/README.md)
+- Origin and keywords: [references/origin-methodology-keywords.md](./references/origin-methodology-keywords.md)
+- Host entry rules: [entry-rules/README.md](./entry-rules/README.md)
+- Migration model: [references/migration-host-model.md](./references/migration-host-model.md)
+- Requirements: [references/requirements-spec.md](./references/requirements-spec.md)
+- Architecture: [references/system-architecture.md](./references/system-architecture.md)
+- Turn templates: [references/turn-templates.md](./references/turn-templates.md)
