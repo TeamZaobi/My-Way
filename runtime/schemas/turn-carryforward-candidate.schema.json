@@ -1,0 +1,103 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://my-way.dev/runtime/schemas/turn-carryforward-candidate.schema.json",
+  "title": "My-Way Turn Carry-Forward Candidate",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "candidate_id",
+    "turn_id",
+    "source_note_id",
+    "source_scope",
+    "decision",
+    "candidate_type",
+    "candidate_text",
+    "rationale",
+    "evidence",
+    "confidence",
+    "stability",
+    "write_target"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string"
+    },
+    "candidate_id": {
+      "type": "string"
+    },
+    "turn_id": {
+      "type": "string"
+    },
+    "source_note_id": {
+      "type": "string"
+    },
+    "source_scope": {
+      "type": "string",
+      "enum": [
+        "session",
+        "project",
+        "global-candidate"
+      ]
+    },
+    "decision": {
+      "type": "string",
+      "enum": [
+        "skip",
+        "carry-forward"
+      ]
+    },
+    "candidate_type": {
+      "type": "string",
+      "enum": [
+        "none",
+        "preference",
+        "constraint",
+        "method-pattern",
+        "capability-mount-rule",
+        "workflow-pattern",
+        "routing-rule",
+        "external-pattern",
+        "project-context"
+      ]
+    },
+    "candidate_text": {
+      "type": "string",
+      "minLength": 1
+    },
+    "rationale": {
+      "type": "string",
+      "minLength": 1
+    },
+    "evidence": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "maxItems": 3
+    },
+    "confidence": {
+      "type": "string",
+      "enum": [
+        "low",
+        "medium",
+        "high"
+      ]
+    },
+    "stability": {
+      "type": "string",
+      "enum": [
+        "turn-signal",
+        "repeat-observed",
+        "durable"
+      ]
+    },
+    "write_target": {
+      "type": "string",
+      "enum": [
+        "none",
+        "carry-forward"
+      ]
+    }
+  },
+  "additionalProperties": false
+}

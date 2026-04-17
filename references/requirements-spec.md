@@ -1,4 +1,4 @@
-# My-Way Requirements Spec v0.2
+# My-Way Requirements Spec v0.3
 
 ## 1. Product Statement
 
@@ -8,7 +8,10 @@ This public surface is meant to stand on its own inside a public repository. It 
 
 ## 2. Public Objectives
 
+- reduce repeated explanation cost by translating compressed user intent into a bounded execution framing
+- expose reusable method hooks and capability mounts explicitly instead of hiding them in ad hoc prompts
 - keep one stable per-turn contract across supported hosts
+- separate short notes, durable carry-forward records, and bounded recall plans
 - let public adopters start in `Prompt-only` mode and migrate toward stronger host integration
 - expose append-only operational artifacts that are reviewable and portable
 - separate companion behavior from governance and lifecycle authority
@@ -38,13 +41,17 @@ If a detail is required only to reconstruct a private source tree, it is out of 
 
 ## 4. Core Operating Model
 
-Each turn follows a portable five-step sequence:
+Each turn follows a portable nine-step sequence:
 
-1. determine the user goal, hard constraints, and active authority boundary
-2. produce one minimal `Prelude` outcome
-3. let the host execute the main task
-4. emit at most one short `Postlude` carry-forward note
-5. run review triage only when durable material surfaced
+1. optionally recall a bounded set of durable carry-forward records for the new turn
+2. determine the user goal, hard constraints, and active authority boundary
+3. select any bounded method hooks or capability mounts the turn actually needs
+4. produce one minimal `Prelude` outcome
+5. let the host execute the main task
+6. emit at most one short `Postlude` carry-forward note
+7. optionally derive one durable carry-forward candidate when reusable context surfaced
+8. optionally consolidate promoted candidates into a durable carry-forward store
+9. run review triage only when durable material surfaced
 
 ### 4.1 Prelude Outcomes
 
@@ -55,12 +62,26 @@ Each turn follows a portable five-step sequence:
 - `observe-only`
   - do not rewrite; only observe and optionally note
 
-### 4.2 Non-Negotiable Constraints
+### 4.2 Method Hooks And Capability Mounts
+
+- method hooks are explicit reusable lenses such as acceptance rubrics, review patterns, or problem-solving playbooks
+- capability mounts are explicit reusable helper surfaces such as default search, comparison, validation, or retrieval helpers
+- both must stay bounded to the current turn and must not change the user's goal
+
+### 4.3 Durable Carry-Forward And Recall
+
+- promoted candidates should be upserted into a durable record store instead of being appended blindly forever
+- durable records should preserve provenance and reinforcement so later recall stays reviewable
+- recall should be bounded and inject only the small subset needed by the next `Prelude`
+
+### 4.4 Non-Negotiable Constraints
 
 - no silent intent drift
 - proposal before high-impact mutation
 - one active authority boundary per mixed issue
+- method hooks and capability mounts stay explicit rather than being hidden in opaque prompt expansion
 - compact carry-forward notes by default
+- carry-forward candidates stay separate from human-readable notes
 - graceful fallback when hosts lack strong hooks
 
 ## 5. Authority Model
@@ -95,12 +116,14 @@ The public surface uses three generic authority classes:
 
 ## 7. Public Artifacts
 
-The public surface recognizes three artifact classes:
+The public surface recognizes four artifact classes:
 
 - `turn event`
   - append-only operational facts about a turn
 - `carry-forward note`
   - one short human-readable summary meant to help later review
+- `carry-forward candidate`
+  - one optional durable-context sidecar derived from a finished turn
 - `review exchange packet`
   - structured material passed between `My-Way` and an external reference source
 

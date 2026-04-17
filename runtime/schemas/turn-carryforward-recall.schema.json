@@ -1,0 +1,119 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://my-way.dev/runtime/schemas/turn-carryforward-recall.schema.json",
+  "title": "My-Way Turn Carry-Forward Recall Plan",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "plan_id",
+    "query_turn_id",
+    "query_text",
+    "store_record_count",
+    "selected_records",
+    "recommended_method_hooks",
+    "recommended_capability_mounts",
+    "recommended_hard_constraints",
+    "carry_over_points"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string"
+    },
+    "plan_id": {
+      "type": "string"
+    },
+    "query_turn_id": {
+      "type": "string"
+    },
+    "query_text": {
+      "type": "string",
+      "minLength": 1
+    },
+    "store_record_count": {
+      "type": "integer"
+    },
+    "selected_records": {
+      "type": "array",
+      "maxItems": 5,
+      "items": {
+        "type": "object",
+        "required": [
+          "record_id",
+          "candidate_type",
+          "candidate_text",
+          "injection_slot",
+          "reason",
+          "score"
+        ],
+        "properties": {
+          "record_id": {
+            "type": "string"
+          },
+          "candidate_type": {
+            "type": "string",
+            "enum": [
+              "preference",
+              "constraint",
+              "method-pattern",
+              "capability-mount-rule",
+              "workflow-pattern",
+              "routing-rule",
+              "external-pattern",
+              "project-context"
+            ]
+          },
+          "candidate_text": {
+            "type": "string",
+            "minLength": 1
+          },
+          "injection_slot": {
+            "type": "string",
+            "enum": [
+              "method-hooks",
+              "capability-mounts",
+              "hard-constraints",
+              "carry-over"
+            ]
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 1
+          },
+          "score": {
+            "type": "integer"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "recommended_method_hooks": {
+      "type": "array",
+      "maxItems": 3,
+      "items": {
+        "type": "string"
+      }
+    },
+    "recommended_capability_mounts": {
+      "type": "array",
+      "maxItems": 3,
+      "items": {
+        "type": "string"
+      }
+    },
+    "recommended_hard_constraints": {
+      "type": "array",
+      "maxItems": 3,
+      "items": {
+        "type": "string"
+      }
+    },
+    "carry_over_points": {
+      "type": "array",
+      "maxItems": 3,
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "additionalProperties": false
+}

@@ -23,6 +23,9 @@ from schema_utils import (
 
 EVENT_SCHEMA_PATH = RUNTIME_ROOT / "schemas" / "turn-event.schema.json"
 NOTE_SCHEMA_PATH = RUNTIME_ROOT / "schemas" / "turn-note.schema.json"
+CARRYFORWARD_SCHEMA_PATH = RUNTIME_ROOT / "schemas" / "turn-carryforward-candidate.schema.json"
+CARRYFORWARD_RECORD_SCHEMA_PATH = RUNTIME_ROOT / "schemas" / "carryforward-record.schema.json"
+CARRYFORWARD_RECALL_SCHEMA_PATH = RUNTIME_ROOT / "schemas" / "turn-carryforward-recall.schema.json"
 PACKET_SCHEMA_PATH = RUNTIME_ROOT / "schemas" / "reflection-exchange-packet.schema.json"
 TRIAGE_AUDIT_SCHEMA_PATH = RUNTIME_ROOT / "bridge" / "reflection-triage-audit.schema.json"
 
@@ -34,6 +37,142 @@ SCOPE_ORDER = {
 
 GLOBAL_SIGNAL_TOKENS = (
     "reference-system",
+    "codex",
+    "claude-code",
+    "antigravity",
+    "cross-host",
+    "跨宿主",
+)
+
+EPHEMERAL_SIGNAL_TOKENS = (
+    "this turn",
+    "one-off",
+    "temporary",
+    "临时",
+    "一次性",
+    "本轮",
+    "当前对话",
+    "临时修补",
+)
+
+PREFERENCE_SIGNAL_TOKENS = (
+    "prefer",
+    "preferred",
+    "default",
+    "默认",
+    "偏好",
+    "习惯",
+    "优先",
+    "不要",
+)
+
+CONSTRAINT_SIGNAL_TOKENS = (
+    "must",
+    "must not",
+    "cannot",
+    "禁止",
+    "必须",
+    "不能",
+    "guardrail",
+    "constraint",
+    "约束",
+)
+
+METHOD_SIGNAL_TOKENS = (
+    "rubric",
+    "playbook",
+    "heuristic",
+    "mental model",
+    "acceptance pattern",
+    "review pattern",
+    "验收",
+    "审核",
+    "审查",
+    "解题",
+    "思维模型",
+    "反模式",
+)
+
+CAPABILITY_MOUNT_SIGNAL_TOKENS = (
+    "capability mount",
+    "capability mounts",
+    "mount rule",
+    "tool mount",
+    "能力挂件",
+    "能力挂载",
+    "默认挂载",
+    "默认加载",
+    "挂件",
+    "能力面",
+)
+
+WORKFLOW_SIGNAL_TOKENS = (
+    "workflow",
+    "cutover",
+    "prelude",
+    "postlude",
+    "流程",
+    "接缝",
+    "hook",
+)
+
+ROUTING_SIGNAL_TOKENS = (
+    "authority",
+    "owner",
+    "routing",
+    "route",
+    "handoff",
+    "boundary",
+    "governance-authority",
+    "lifecycle-authority",
+    "governance-owner",
+    "lifecycle-owner",
+    "写权",
+    "真源",
+    "治理",
+    "边界",
+    "转交",
+)
+
+CONFIDENCE_RANK = {
+    "low": 0,
+    "medium": 1,
+    "high": 2,
+}
+
+STABILITY_RANK = {
+    "turn-signal": 0,
+    "repeat-observed": 1,
+    "durable": 2,
+}
+
+RECALL_TAG_TOKENS = (
+    "evolve",
+    "prelude",
+    "postlude",
+    "cutover",
+    "workflow",
+    "hook",
+    "验收",
+    "审核",
+    "审查",
+    "rubric",
+    "playbook",
+    "思维模型",
+    "反模式",
+    "capability mount",
+    "能力挂件",
+    "能力挂载",
+    "默认挂载",
+    "能力面",
+    "authority",
+    "owner",
+    "routing",
+    "handoff",
+    "boundary",
+    "边界",
+    "治理",
+    "真源",
     "codex",
     "claude-code",
     "antigravity",
@@ -125,7 +264,12 @@ def _count_prior_note_hits(note: dict[str, Any], history: list[dict[str, Any]]) 
 
 
 def _note_has_global_signal(note: dict[str, Any]) -> bool:
-    text = normalize_text(
+    text = _note_signal_text(note)
+    return any(token in text for token in GLOBAL_SIGNAL_TOKENS)
+
+
+def _note_signal_text(note: dict[str, Any]) -> str:
+    return normalize_text(
         " ".join(
             [
                 note.get("goal", ""),
@@ -135,7 +279,6 @@ def _note_has_global_signal(note: dict[str, Any]) -> bool:
             ]
         )
     )
-    return any(token in text for token in GLOBAL_SIGNAL_TOKENS)
 
 
 def _max_allowed_scope(note: dict[str, Any], repeat_hits: int) -> str:
@@ -199,6 +342,690 @@ def write_note_artifact(
         "repeat_hits": repeat_hits,
         "note_path": str(note_path),
         "history_appended": history_appended,
+    }
+
+
+def _carryforward_evidence(note: dict[str, Any]) -> list[str]:
+    evidence: list[str] = []
+    for point in note.get("candidate_points", []):
+        if isinstance(point, str) and point.strip():
+            evidence.append(point.strip())
+    for field in ("goal", "result"):
+        value = note.get(field)
+        if isinstance(value, str) and value.strip():
+            evidence.append(value.strip())
+
+    deduped: list[str] = []
+    for item in evidence:
+        if item not in deduped:
+            deduped.append(item)
+    return deduped[:3]
+
+
+def _dedupe_strings(items: list[str], limit: int | None = None) -> list[str]:
+    deduped: list[str] = []
+    for item in items:
+        if not isinstance(item, str):
+            continue
+        normalized = item.strip()
+        if not normalized or normalized in deduped:
+            continue
+        deduped.append(normalized)
+        if limit is not None and len(deduped) >= limit:
+            break
+    return deduped
+
+
+def _ranked_max(values: list[str], rank_map: dict[str, int], default: str) -> str:
+    best = default
+    best_rank = rank_map.get(default, -1)
+    for value in values:
+        rank = rank_map.get(value, -1)
+        if rank > best_rank:
+            best = value
+            best_rank = rank
+    return best
+
+
+def _carryforward_category_tag(candidate_type: str) -> str:
+    return {
+        "preference": "preference",
+        "constraint": "constraint",
+        "method-pattern": "method",
+        "capability-mount-rule": "mount",
+        "workflow-pattern": "workflow",
+        "routing-rule": "routing",
+        "external-pattern": "external",
+        "project-context": "project",
+    }.get(candidate_type, "general")
+
+
+def _preferred_injection_slot(candidate_type: str) -> str:
+    return {
+        "method-pattern": "method-hooks",
+        "capability-mount-rule": "capability-mounts",
+        "constraint": "hard-constraints",
+        "routing-rule": "hard-constraints",
+        "preference": "carry-over",
+        "workflow-pattern": "carry-over",
+        "external-pattern": "carry-over",
+        "project-context": "carry-over",
+    }.get(candidate_type, "carry-over")
+
+
+def _carryforward_recall_tags(candidate_type: str, candidate_text: str, evidence: list[str]) -> list[str]:
+    text = normalize_text(" ".join([candidate_text, *evidence]))
+    tags = [_carryforward_category_tag(candidate_type), _preferred_injection_slot(candidate_type)]
+    for token in RECALL_TAG_TOKENS:
+        if token in text and token not in tags:
+            tags.append(token)
+    return _dedupe_strings(tags, limit=8)
+
+
+def _carryforward_key(candidate_type: str, candidate_text: str) -> str:
+    candidate_hash = sha256_text(
+        canonical_json(
+            {
+                "candidate_type": candidate_type,
+                "candidate_text": normalize_text(candidate_text),
+            }
+        )
+    )
+    return f"ckey_{candidate_hash[:12]}"
+
+
+def _contains_external_pattern_signal(text: str) -> bool:
+    if "evolve" in text or "inspired by" in text or "成熟项目" in text or "前车" in text:
+        return True
+    if "参考" in text and ("经验" in text or "模式" in text or "项目" in text):
+        return True
+    if "边界矩阵" in text or "最小目录结构" in text or "cutover" in text:
+        return True
+    return False
+
+
+def _contains_method_signal(text: str) -> bool:
+    if any(token in text for token in METHOD_SIGNAL_TOKENS):
+        return True
+    review_tokens = ("验收", "审核", "review")
+    method_tokens = ("rubric", "playbook", "思维模型", "反模式", "方法")
+    return any(token in text for token in review_tokens) and any(token in text for token in method_tokens)
+
+
+def _contains_capability_mount_signal(text: str) -> bool:
+    if any(token in text for token in CAPABILITY_MOUNT_SIGNAL_TOKENS):
+        return True
+    mount_tokens = ("挂载", "mount")
+    capability_tokens = ("能力", "capability", "工具", "tool", "挂件")
+    return any(token in text for token in mount_tokens) and any(token in text for token in capability_tokens)
+
+
+def _classify_carryforward_type(note: dict[str, Any], repeat_hits: int) -> str:
+    text = _note_signal_text(note)
+    if _contains_external_pattern_signal(text):
+        return "external-pattern"
+    if _contains_capability_mount_signal(text):
+        return "capability-mount-rule"
+    if any(token in text for token in ROUTING_SIGNAL_TOKENS):
+        return "routing-rule"
+    if _contains_method_signal(text):
+        return "method-pattern"
+    if any(token in text for token in CONSTRAINT_SIGNAL_TOKENS):
+        return "constraint"
+    if any(token in text for token in PREFERENCE_SIGNAL_TOKENS):
+        return "preference"
+    if any(token in text for token in WORKFLOW_SIGNAL_TOKENS):
+        return "workflow-pattern"
+    if note.get("scope") in {"project", "global-candidate"} or repeat_hits >= 2:
+        return "project-context"
+    return "none"
+
+
+def _carryforward_stability(note: dict[str, Any], repeat_hits: int) -> str:
+    if note.get("scope") == "global-candidate" or note.get("retention") == "review-required":
+        return "durable"
+    if note.get("scope") == "project" or note.get("retention") == "medium" or repeat_hits >= 1:
+        return "repeat-observed"
+    return "turn-signal"
+
+
+def _carryforward_confidence(decision: str, candidate_type: str, stability: str, repeat_hits: int) -> str:
+    if decision != "carry-forward":
+        return "low"
+    if candidate_type in {"routing-rule", "external-pattern", "method-pattern", "capability-mount-rule"}:
+        return "high"
+    if stability == "durable" or repeat_hits >= 2:
+        return "high"
+    if stability == "repeat-observed":
+        return "medium"
+    return "medium"
+
+
+def _carryforward_text(note: dict[str, Any], decision: str) -> str:
+    evidence = _carryforward_evidence(note)
+    if evidence:
+        return evidence[0]
+    if decision == "carry-forward":
+        return note.get("goal") or note.get("result") or "Promote durable carry-forward context."
+    return "No durable carry-forward candidate promoted from this turn."
+
+
+def _carryforward_rationale(
+    note: dict[str, Any],
+    decision: str,
+    candidate_type: str,
+    stability: str,
+    is_ephemeral: bool,
+) -> str:
+    if decision == "skip":
+        if is_ephemeral:
+            return "Signals in this note look turn-local or temporary, so they should remain in Postlude only."
+        return "This note does not yet show a durable, reusable pattern worth promoting as carry-forward context."
+
+    type_labels = {
+        "preference": "stable preference",
+        "constraint": "durable constraint",
+        "method-pattern": "reusable method pattern",
+        "capability-mount-rule": "reusable capability mount rule",
+        "workflow-pattern": "reusable workflow pattern",
+        "routing-rule": "reusable authority routing rule",
+        "external-pattern": "reusable external project pattern",
+        "project-context": "durable project context",
+    }
+    return (
+        f"This note contains a {type_labels.get(candidate_type, 'durable signal')} "
+        f"with {stability} strength, so it should be promoted as carry-forward context."
+    )
+
+
+def build_carryforward_candidate(
+    note: dict[str, Any],
+    history_path: Path | None = None,
+) -> dict[str, Any]:
+    history = [
+        prior
+        for prior in _load_note_history(history_path)
+        if prior.get("turn_id") != note.get("turn_id")
+    ]
+    repeat_hits = _count_prior_note_hits(note, history)
+    candidate_type = _classify_carryforward_type(note, repeat_hits)
+    stability = _carryforward_stability(note, repeat_hits)
+    text = _note_signal_text(note)
+    is_ephemeral = any(token in text for token in EPHEMERAL_SIGNAL_TOKENS)
+
+    if candidate_type == "none" or is_ephemeral:
+        decision = "skip"
+    elif candidate_type in {
+        "preference",
+        "constraint",
+        "method-pattern",
+        "capability-mount-rule",
+        "routing-rule",
+        "external-pattern",
+    }:
+        decision = "carry-forward"
+    elif candidate_type in {"workflow-pattern", "project-context"} and stability != "turn-signal":
+        decision = "carry-forward"
+    else:
+        decision = "skip"
+
+    candidate_text = _carryforward_text(note, decision)
+    candidate_hash = sha256_text(
+        canonical_json(
+            {
+                "turn_id": note.get("turn_id", ""),
+                "candidate_type": candidate_type,
+                "candidate_text": normalize_text(candidate_text),
+            }
+        )
+    )
+    record = {
+        "schema_version": "v0.1",
+        "candidate_id": f"carry_{candidate_hash[:12]}",
+        "turn_id": note["turn_id"],
+        "source_note_id": note["note_id"],
+        "source_scope": note["scope"],
+        "decision": decision,
+        "candidate_type": candidate_type,
+        "candidate_text": candidate_text,
+        "rationale": _carryforward_rationale(note, decision, candidate_type, stability, is_ephemeral),
+        "evidence": _carryforward_evidence(note),
+        "confidence": _carryforward_confidence(decision, candidate_type, stability, repeat_hits),
+        "stability": stability,
+        "write_target": "carry-forward" if decision == "carry-forward" else "none",
+    }
+    _validate_or_raise(record, CARRYFORWARD_SCHEMA_PATH, "turn carry-forward candidate")
+    return record
+
+
+def _append_carryforward_log(record: dict[str, Any], carryforward_log_path: Path) -> bool:
+    for existing in load_jsonl(carryforward_log_path):
+        if existing.get("candidate_id") == record["candidate_id"] or existing.get("turn_id") == record["turn_id"]:
+            return False
+    append_jsonl(carryforward_log_path, record)
+    return True
+
+
+def _load_carryforward_records(store_path: Path) -> list[dict[str, Any]]:
+    if not store_path.exists():
+        return []
+    if store_path.suffix == ".json":
+        payload = load_json(store_path)
+        if isinstance(payload, list):
+            return [record for record in payload if isinstance(record, dict)]
+        return []
+    return [record for record in load_jsonl(store_path) if isinstance(record, dict)]
+
+
+def _write_carryforward_records(store_path: Path, records: list[dict[str, Any]]) -> None:
+    store_path.parent.mkdir(parents=True, exist_ok=True)
+    lines = "\n".join(
+        json.dumps(record, ensure_ascii=False, separators=(",", ":")) for record in records
+    )
+    if lines:
+        lines += "\n"
+    store_path.write_text(lines, encoding="utf-8")
+
+
+def _build_carryforward_record(candidate: dict[str, Any]) -> dict[str, Any]:
+    timestamp = now_iso()
+    record_key = _carryforward_key(candidate["candidate_type"], candidate["candidate_text"])
+    record = {
+        "schema_version": "v0.1",
+        "record_id": f"carryrec_{record_key.split('_', 1)[1]}",
+        "record_key": record_key,
+        "candidate_type": candidate["candidate_type"],
+        "candidate_text": candidate["candidate_text"],
+        "status": "active",
+        "preferred_injection_slot": _preferred_injection_slot(candidate["candidate_type"]),
+        "recall_tags": _carryforward_recall_tags(
+            candidate["candidate_type"],
+            candidate["candidate_text"],
+            candidate["evidence"],
+        ),
+        "source_scopes": [candidate["source_scope"]],
+        "source_turn_ids": [candidate["turn_id"]],
+        "source_note_ids": [candidate["source_note_id"]],
+        "evidence": _dedupe_strings(candidate["evidence"], limit=5),
+        "confidence": candidate["confidence"],
+        "stability": candidate["stability"],
+        "reinforcement_count": 1,
+        "first_seen_at": timestamp,
+        "last_seen_at": timestamp,
+    }
+    _validate_or_raise(record, CARRYFORWARD_RECORD_SCHEMA_PATH, "carry-forward record")
+    return record
+
+
+def consolidate_carryforward_candidate_artifact(
+    candidate_path: Path,
+    store_path: Path,
+) -> dict[str, Any]:
+    candidate = load_json(candidate_path)
+    if not isinstance(candidate, dict):
+        raise ValueError("carry-forward candidate artifact must be a JSON object")
+    _validate_or_raise(candidate, CARRYFORWARD_SCHEMA_PATH, "turn carry-forward candidate")
+
+    if candidate["decision"] != "carry-forward":
+        return {
+            "status": "skipped",
+            "decision": candidate["decision"],
+            "candidate_type": candidate["candidate_type"],
+            "store_path": str(store_path),
+        }
+
+    records = _load_carryforward_records(store_path)
+    for record in records:
+        _validate_or_raise(record, CARRYFORWARD_RECORD_SCHEMA_PATH, "carry-forward record")
+
+    record_key = _carryforward_key(candidate["candidate_type"], candidate["candidate_text"])
+    for record in records:
+        if record.get("record_key") != record_key or record.get("status") != "active":
+            continue
+        if candidate["turn_id"] in record.get("source_turn_ids", []):
+            return {
+                "status": "deduped",
+                "record_id": record["record_id"],
+                "record_key": record["record_key"],
+                "candidate_type": record["candidate_type"],
+                "reinforcement_count": record["reinforcement_count"],
+                "store_path": str(store_path),
+            }
+
+        if len(candidate["candidate_text"]) >= len(record.get("candidate_text", "")):
+            record["candidate_text"] = candidate["candidate_text"]
+        record["source_scopes"] = _dedupe_strings(
+            [*record.get("source_scopes", []), candidate["source_scope"]],
+            limit=3,
+        )
+        record["source_turn_ids"] = _dedupe_strings(
+            [*record.get("source_turn_ids", []), candidate["turn_id"]],
+        )
+        record["source_note_ids"] = _dedupe_strings(
+            [*record.get("source_note_ids", []), candidate["source_note_id"]],
+        )
+        record["evidence"] = _dedupe_strings(
+            [*record.get("evidence", []), *candidate["evidence"]],
+            limit=5,
+        )
+        record["confidence"] = _ranked_max(
+            [record.get("confidence", "low"), candidate["confidence"]],
+            CONFIDENCE_RANK,
+            default="low",
+        )
+        record["stability"] = _ranked_max(
+            [record.get("stability", "turn-signal"), candidate["stability"]],
+            STABILITY_RANK,
+            default="turn-signal",
+        )
+        record["reinforcement_count"] = max(
+            int(record.get("reinforcement_count", 1)) + 1,
+            len(record["source_turn_ids"]),
+        )
+        record["last_seen_at"] = now_iso()
+        record["preferred_injection_slot"] = _preferred_injection_slot(record["candidate_type"])
+        record["recall_tags"] = _carryforward_recall_tags(
+            record["candidate_type"],
+            record["candidate_text"],
+            record["evidence"],
+        )
+        _validate_or_raise(record, CARRYFORWARD_RECORD_SCHEMA_PATH, "carry-forward record")
+        _write_carryforward_records(store_path, records)
+        return {
+            "status": "updated",
+            "record_id": record["record_id"],
+            "record_key": record["record_key"],
+            "candidate_type": record["candidate_type"],
+            "reinforcement_count": record["reinforcement_count"],
+            "store_path": str(store_path),
+        }
+
+    record = _build_carryforward_record(candidate)
+    records.append(record)
+    _write_carryforward_records(store_path, records)
+    return {
+        "status": "created",
+        "record_id": record["record_id"],
+        "record_key": record["record_key"],
+        "candidate_type": record["candidate_type"],
+        "reinforcement_count": record["reinforcement_count"],
+        "store_path": str(store_path),
+    }
+
+
+def _carryforward_query_text(payload: dict[str, Any]) -> str:
+    values: list[str] = []
+    for key in ("user_goal", "action_focus", "result"):
+        value = payload.get(key)
+        if isinstance(value, str) and value.strip():
+            values.append(value)
+    for key in ("method_hooks", "capability_mounts", "hard_constraints", "context_points"):
+        values.extend(
+            item
+            for item in payload.get(key, [])
+            if isinstance(item, str) and item.strip()
+        )
+    return normalize_text(" ".join(values))
+
+
+def _query_recall_tags(query_text: str) -> list[str]:
+    tags: list[str] = []
+    if _contains_method_signal(query_text) or any(
+        token in query_text for token in ("方案", "审核", "验收", "问题", "解决", "review", "design", "plan")
+    ):
+        tags.append("method")
+    if _contains_capability_mount_signal(query_text) or any(
+        token in query_text
+        for token in ("能力", "工具", "挂载", "mount", "搜索", "校验", "对比", "debug", "validate", "compare")
+    ):
+        tags.append("mount")
+    if any(token in query_text for token in CONSTRAINT_SIGNAL_TOKENS) or "边界" in query_text:
+        tags.append("constraint")
+    if any(token in query_text for token in ROUTING_SIGNAL_TOKENS):
+        tags.append("routing")
+    if _contains_external_pattern_signal(query_text) or "参考" in query_text:
+        tags.append("external")
+    if any(token in query_text for token in WORKFLOW_SIGNAL_TOKENS):
+        tags.append("workflow")
+    if "项目" in query_text or "project" in query_text or "上下文" in query_text:
+        tags.append("project")
+    if any(token in query_text for token in PREFERENCE_SIGNAL_TOKENS):
+        tags.append("preference")
+    return _dedupe_strings(tags)
+
+
+def _score_carryforward_record(record: dict[str, Any], query_text: str, query_tags: list[str]) -> tuple[int, str | None]:
+    if record.get("status") != "active":
+        return 0, None
+
+    score = 0
+    reasons: list[str] = []
+    matched = False
+    record_tags = [tag for tag in record.get("recall_tags", []) if isinstance(tag, str)]
+
+    tag_hits = [tag for tag in record_tags if tag in query_tags or tag in query_text]
+    if tag_hits:
+        score += 2 * len(tag_hits)
+        reasons.append(f"matched recall tags: {', '.join(tag_hits[:3])}")
+        matched = True
+
+    candidate_text = normalize_text(record.get("candidate_text", ""))
+    if candidate_text and candidate_text in query_text:
+        score += 4
+        reasons.append("candidate text overlaps with the current turn")
+        matched = True
+
+    evidence_hits = 0
+    for evidence in record.get("evidence", []):
+        evidence_text = normalize_text(evidence)
+        if evidence_text and evidence_text in query_text:
+            evidence_hits += 1
+    if evidence_hits:
+        score += 2 * evidence_hits
+        reasons.append("evidence from prior turns overlaps with the current turn")
+        matched = True
+
+    if record.get("candidate_type") in {"constraint", "routing-rule"}:
+        score += 1
+        reasons.append("guardrail-like carry-forward records stay slightly hot by default")
+
+    if not matched and record.get("candidate_type") not in {"constraint", "routing-rule"}:
+        return 0, None
+
+    score += CONFIDENCE_RANK.get(record.get("confidence", "low"), 0)
+    score += STABILITY_RANK.get(record.get("stability", "turn-signal"), 0)
+    score += min(int(record.get("reinforcement_count", 1)), 3)
+    return score, "; ".join(reasons) if reasons else "Matched durable carry-forward context."
+
+
+def build_carryforward_recall_plan(
+    query: dict[str, Any],
+    store_path: Path,
+) -> dict[str, Any]:
+    records = _load_carryforward_records(store_path)
+    active_records: list[dict[str, Any]] = []
+    for record in records:
+        _validate_or_raise(record, CARRYFORWARD_RECORD_SCHEMA_PATH, "carry-forward record")
+        if record.get("status") == "active":
+            active_records.append(record)
+
+    query_text = _carryforward_query_text(query)
+    if not query_text:
+        raise ValueError("carry-forward recall query must include at least one non-empty text field")
+    query_tags = _query_recall_tags(query_text)
+
+    ranked: list[tuple[int, dict[str, Any], str]] = []
+    for record in active_records:
+        score, reason = _score_carryforward_record(record, query_text, query_tags)
+        if score > 0 and reason:
+            ranked.append((score, record, reason))
+    ranked.sort(
+        key=lambda item: (
+            item[0],
+            int(item[1].get("reinforcement_count", 1)),
+            CONFIDENCE_RANK.get(item[1].get("confidence", "low"), 0),
+        ),
+        reverse=True,
+    )
+
+    selected: list[dict[str, Any]] = []
+    selected_ids: set[str] = set()
+
+    def add_record(record: dict[str, Any], score: int, reason: str) -> None:
+        if record["record_id"] in selected_ids or len(selected) >= 5:
+            return
+        selected.append(
+            {
+                "record_id": record["record_id"],
+                "candidate_type": record["candidate_type"],
+                "candidate_text": record["candidate_text"],
+                "injection_slot": record["preferred_injection_slot"],
+                "reason": reason,
+                "score": score,
+            }
+        )
+        selected_ids.add(record["record_id"])
+
+    for score, record, reason in ranked:
+        add_record(record, score, reason)
+
+    fallback_types = (
+        "method-pattern",
+        "capability-mount-rule",
+        "constraint",
+        "routing-rule",
+    )
+    for candidate_type in fallback_types:
+        if len(selected) >= 5 or any(item["candidate_type"] == candidate_type for item in selected):
+            continue
+        candidates = [record for record in active_records if record["candidate_type"] == candidate_type]
+        if not candidates:
+            continue
+        candidates.sort(
+            key=lambda record: (
+                int(record.get("reinforcement_count", 1)),
+                CONFIDENCE_RANK.get(record.get("confidence", "low"), 0),
+                STABILITY_RANK.get(record.get("stability", "turn-signal"), 0),
+            ),
+            reverse=True,
+        )
+        add_record(candidates[0], 1, "Fallback recall for a stable default carry-forward type.")
+
+    plan_hash = sha256_text(
+        canonical_json(
+            {
+                "query_text": query_text,
+                "record_ids": [item["record_id"] for item in selected],
+            }
+        )
+    )
+    plan = {
+        "schema_version": "v0.1",
+        "plan_id": f"carryrecall_{plan_hash[:12]}",
+        "query_turn_id": query.get("turn_id", f"turn_{plan_hash[:12]}"),
+        "query_text": query_text,
+        "store_record_count": len(active_records),
+        "selected_records": selected,
+        "recommended_method_hooks": _dedupe_strings(
+            [item["candidate_text"] for item in selected if item["injection_slot"] == "method-hooks"],
+            limit=3,
+        ),
+        "recommended_capability_mounts": _dedupe_strings(
+            [item["candidate_text"] for item in selected if item["injection_slot"] == "capability-mounts"],
+            limit=3,
+        ),
+        "recommended_hard_constraints": _dedupe_strings(
+            [item["candidate_text"] for item in selected if item["injection_slot"] == "hard-constraints"],
+            limit=3,
+        ),
+        "carry_over_points": _dedupe_strings(
+            [item["candidate_text"] for item in selected if item["injection_slot"] == "carry-over"],
+            limit=3,
+        ),
+    }
+    _validate_or_raise(plan, CARRYFORWARD_RECALL_SCHEMA_PATH, "turn carry-forward recall")
+    return plan
+
+
+def write_carryforward_recall_artifact(
+    input_json_path: Path,
+    store_path: Path,
+    output_path: Path,
+) -> dict[str, Any]:
+    query = load_json(input_json_path)
+    if not isinstance(query, dict):
+        raise ValueError("carry-forward recall input must be a JSON object")
+    plan = build_carryforward_recall_plan(query, store_path)
+    write_json(output_path, plan)
+    return {
+        "status": "written",
+        "plan_id": plan["plan_id"],
+        "selected_count": len(plan["selected_records"]),
+        "output_path": str(output_path),
+    }
+
+
+def write_carryforward_candidate_artifact(
+    note_path: Path,
+    candidate_path: Path,
+    history_path: Path | None = None,
+    carryforward_log_path: Path | None = None,
+) -> dict[str, Any]:
+    note = load_json(note_path)
+    if not isinstance(note, dict):
+        raise ValueError("note artifact must be a JSON object")
+    _validate_or_raise(note, NOTE_SCHEMA_PATH, "turn note")
+
+    record = build_carryforward_candidate(note, history_path=history_path)
+    write_json(candidate_path, record)
+
+    log_appended = False
+    if carryforward_log_path is not None and record["decision"] == "carry-forward":
+        log_appended = _append_carryforward_log(record, carryforward_log_path)
+
+    return {
+        "status": "written",
+        "candidate_id": record["candidate_id"],
+        "decision": record["decision"],
+        "candidate_type": record["candidate_type"],
+        "write_target": record["write_target"],
+        "candidate_path": str(candidate_path),
+        "log_appended": log_appended,
+    }
+
+
+def finalize_turn_artifacts(
+    note: dict[str, Any],
+    note_path: Path,
+    candidate_path: Path,
+    history_path: Path | None = None,
+    carryforward_log_path: Path | None = None,
+    carryforward_store_path: Path | None = None,
+    strict_scope: bool = True,
+) -> dict[str, Any]:
+    note_result = write_note_artifact(
+        note,
+        note_path,
+        history_path=history_path,
+        strict_scope=strict_scope,
+    )
+    carryforward_result = write_carryforward_candidate_artifact(
+        note_path,
+        candidate_path,
+        history_path=history_path,
+        carryforward_log_path=carryforward_log_path,
+    )
+    carryforward_record_result = (
+        consolidate_carryforward_candidate_artifact(candidate_path, carryforward_store_path)
+        if carryforward_store_path is not None
+        else {"status": "not-requested"}
+    )
+    return {
+        "status": "written",
+        "turn_id": note.get("turn_id"),
+        "note": note_result,
+        "carry_forward_candidate": carryforward_result,
+        "carry_forward_record": carryforward_record_result,
     }
 
 
@@ -393,6 +1220,66 @@ def build_parser() -> argparse.ArgumentParser:
     note_parser.add_argument("--history-path")
     note_parser.add_argument("--no-strict-scope", action="store_true")
 
+    carryforward_parser = subparsers.add_parser(
+        "write-carryforward-candidate",
+        help="derive a durable carry-forward candidate from one turn note",
+    )
+    carryforward_parser.add_argument(
+        "--note-path",
+        default=str(RUNTIME_ROOT / "examples" / "turn.note.json"),
+    )
+    carryforward_parser.add_argument(
+        "--candidate-path",
+        default=str(RUNTIME_ROOT / "examples" / "turn.carryforward.candidate.json"),
+    )
+    carryforward_parser.add_argument("--history-path")
+    carryforward_parser.add_argument("--carryforward-log-path")
+
+    consolidate_parser = subparsers.add_parser(
+        "consolidate-carryforward",
+        help="upsert a promoted carry-forward candidate into the durable carry-forward store",
+    )
+    consolidate_parser.add_argument(
+        "--candidate-path",
+        default=str(RUNTIME_ROOT / "examples" / "turn.carryforward.candidate.json"),
+    )
+    consolidate_parser.add_argument(
+        "--carryforward-store-path",
+        default=str(RUNTIME_ROOT / "examples" / "carryforward.store.jsonl"),
+    )
+
+    recall_parser = subparsers.add_parser(
+        "recall-carryforward",
+        help="build a bounded recall plan from the durable carry-forward store",
+    )
+    recall_parser.add_argument("--input-json", required=True)
+    recall_parser.add_argument(
+        "--carryforward-store-path",
+        default=str(RUNTIME_ROOT / "examples" / "carryforward.store.jsonl"),
+    )
+    recall_parser.add_argument(
+        "--output-path",
+        default=str(RUNTIME_ROOT / "examples" / "turn.carryforward.recall.json"),
+    )
+
+    finalize_parser = subparsers.add_parser(
+        "finalize-turn",
+        help="write turn.note.json and derive the durable carry-forward candidate sidecar",
+    )
+    finalize_parser.add_argument("--input-json", required=True)
+    finalize_parser.add_argument(
+        "--note-path",
+        default=str(RUNTIME_ROOT / "examples" / "turn.note.json"),
+    )
+    finalize_parser.add_argument(
+        "--candidate-path",
+        default=str(RUNTIME_ROOT / "examples" / "turn.carryforward.candidate.json"),
+    )
+    finalize_parser.add_argument("--history-path")
+    finalize_parser.add_argument("--carryforward-log-path")
+    finalize_parser.add_argument("--carryforward-store-path")
+    finalize_parser.add_argument("--no-strict-scope", action="store_true")
+
     packet_parser = subparsers.add_parser("write-packet", help="write reflection exchange packet")
     packet_parser.add_argument("--input-json", required=True)
     packet_parser.add_argument(
@@ -433,6 +1320,46 @@ def main() -> int:
             _load_input_json(args.input_json),
             Path(args.note_path),
             history_path=Path(args.history_path) if args.history_path else None,
+            strict_scope=not args.no_strict_scope,
+        )
+        _print_json(result)
+        return 0
+
+    if args.command == "write-carryforward-candidate":
+        result = write_carryforward_candidate_artifact(
+            Path(args.note_path),
+            Path(args.candidate_path),
+            history_path=Path(args.history_path) if args.history_path else None,
+            carryforward_log_path=Path(args.carryforward_log_path) if args.carryforward_log_path else None,
+        )
+        _print_json(result)
+        return 0
+
+    if args.command == "consolidate-carryforward":
+        result = consolidate_carryforward_candidate_artifact(
+            Path(args.candidate_path),
+            Path(args.carryforward_store_path),
+        )
+        _print_json(result)
+        return 0
+
+    if args.command == "recall-carryforward":
+        result = write_carryforward_recall_artifact(
+            Path(args.input_json),
+            Path(args.carryforward_store_path),
+            Path(args.output_path),
+        )
+        _print_json(result)
+        return 0
+
+    if args.command == "finalize-turn":
+        result = finalize_turn_artifacts(
+            _load_input_json(args.input_json),
+            Path(args.note_path),
+            Path(args.candidate_path),
+            history_path=Path(args.history_path) if args.history_path else None,
+            carryforward_log_path=Path(args.carryforward_log_path) if args.carryforward_log_path else None,
+            carryforward_store_path=Path(args.carryforward_store_path) if args.carryforward_store_path else None,
             strict_scope=not args.no_strict_scope,
         )
         _print_json(result)

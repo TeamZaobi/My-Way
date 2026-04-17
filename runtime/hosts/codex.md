@@ -13,8 +13,11 @@
 
 ### Prompt-only
 
-- 新 turn 到来时做一次 `Prelude`
+- 新 turn 到来时，先做一次最小 `carry-forward recall`
+- 然后做一次 `Prelude`，同时决定这轮是否需要额外的 `method hooks` 和 `capability mounts`
 - assistant 完成这一轮后补一条 `Postlude`
+- 如果这轮出现可复用的稳定上下文，再派生一个可选 `carry-forward candidate`
+- promoted candidate 再合并进 durable carry-forward store
 - 若问题落到治理或 skill 生命周期，直接转交 owner
 
 ### Hook-enhanced
@@ -27,9 +30,27 @@
 
 映射原则：
 
-- 开始信号 -> `turn_start / prelude`
-- 返回信号 -> `execute`
-- 结束信号 -> `postlude`
+ - 开始信号 -> `turn_start / carry-forward recall / prelude(intent translation / method select / capability mount)`
+ - 返回信号 -> `execute`
+ - 结束信号 -> `postlude -> carry-forward candidate -> durable carry-forward store`
+
+推荐命令面：
+
+```bash
+python scripts/myway_runtime.py finalize-turn \
+  --input-json /path/to/postlude.note.json \
+  --note-path /path/to/turn.note.json \
+  --history-path /path/to/turn.notes.history.jsonl \
+  --candidate-path /path/to/turn.carryforward.candidate.json \
+  --carryforward-log-path /path/to/turn.carryforward.log.jsonl \
+  --carryforward-store-path /path/to/turn.carryforward.store.jsonl
+```
+
+约束：
+
+- hook 只需要构造一份 `turn.note` 结构的 JSON
+- `My-Way` 自己负责 note 落盘、carry-forward sidecar 判断、durable store consolidation 和 recall plan
+- 这个 sidecar 是可选耐久上下文，不是隐藏用户记忆
 
 ## 3. Fallback
 

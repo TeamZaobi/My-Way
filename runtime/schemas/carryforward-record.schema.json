@@ -1,0 +1,136 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://my-way.dev/runtime/schemas/carryforward-record.schema.json",
+  "title": "My-Way Carry-Forward Record",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "record_id",
+    "record_key",
+    "candidate_type",
+    "candidate_text",
+    "status",
+    "preferred_injection_slot",
+    "recall_tags",
+    "source_scopes",
+    "source_turn_ids",
+    "source_note_ids",
+    "evidence",
+    "confidence",
+    "stability",
+    "reinforcement_count",
+    "first_seen_at",
+    "last_seen_at"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string"
+    },
+    "record_id": {
+      "type": "string"
+    },
+    "record_key": {
+      "type": "string"
+    },
+    "candidate_type": {
+      "type": "string",
+      "enum": [
+        "preference",
+        "constraint",
+        "method-pattern",
+        "capability-mount-rule",
+        "workflow-pattern",
+        "routing-rule",
+        "external-pattern",
+        "project-context"
+      ]
+    },
+    "candidate_text": {
+      "type": "string",
+      "minLength": 1
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "active",
+        "superseded",
+        "archived"
+      ]
+    },
+    "preferred_injection_slot": {
+      "type": "string",
+      "enum": [
+        "method-hooks",
+        "capability-mounts",
+        "hard-constraints",
+        "carry-over"
+      ]
+    },
+    "recall_tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "maxItems": 8
+    },
+    "source_scopes": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "session",
+          "project",
+          "global-candidate"
+        ]
+      },
+      "maxItems": 3
+    },
+    "source_turn_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "source_note_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "evidence": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "maxItems": 5
+    },
+    "confidence": {
+      "type": "string",
+      "enum": [
+        "low",
+        "medium",
+        "high"
+      ]
+    },
+    "stability": {
+      "type": "string",
+      "enum": [
+        "turn-signal",
+        "repeat-observed",
+        "durable"
+      ]
+    },
+    "reinforcement_count": {
+      "type": "integer"
+    },
+    "first_seen_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "last_seen_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "additionalProperties": false
+}

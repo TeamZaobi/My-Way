@@ -28,14 +28,28 @@
 
 ## 2. v0 固定 artifact
 
-当前固定三类机读 artifact：
+当前固定三类公共 artifact，加上三类 carry-forward sidecar artifact：
 
 1. `turn.events.jsonl`
    - append-only 事件流
 2. `turn.note.json`
    - 每轮最多一条短笔记的实例结构
-3. `reflection.exchange.packet.json`
+3. `turn.carryforward.candidate.json`
+   - `Postlude` 之后派生的耐久 carry-forward 候选，用来分类稳定偏好、方法模式、capability mount 规则等耐久信号
+4. `reflection.exchange.packet.json`
    - 外部反思交换包
+5. `carryforward.store.jsonl`
+   - durable carry-forward record store；对 promoted candidate 做 upsert / merge
+6. `turn.carryforward.recall.json`
+   - 新 turn 进入前生成的 bounded recall plan
+
+说明：
+
+- `turn.carryforward.candidate.json` 不是个人记忆系统
+- `carryforward.store.jsonl` 是 durable context store，不是原始追加日志
+- `turn.carryforward.recall.json` 只承接 recall 结果，不承接隐藏记忆本体
+- 它只是一个可选 sidecar，用来承接可复用的耐久上下文
+- 私有部署可以把它映射到自己的长期状态系统，但公开合同本身不承诺任何隐藏记忆语义
 
 ## 3. 当前目录职责
 
@@ -45,6 +59,9 @@
 
 - `turn-event.schema.json`
 - `turn-note.schema.json`
+- `turn-carryforward-candidate.schema.json`
+- `carryforward-record.schema.json`
+- `turn-carryforward-recall.schema.json`
 - `reflection-exchange-packet.schema.json`
 
 ### 3.2 `hosts/`
@@ -69,6 +86,9 @@
 - 写 smoke checker
 - 写 hook adapter
 - 做 drift audit
+- 验证 note 与 carry-forward sidecar 不混写
+- 验证 method pattern / capability mount rule 会被正确识别
+- 验证 durable carry-forward store 的 upsert / provenance / bounded recall 正常工作
 
 ### 3.4 `bridge/`
 
@@ -99,7 +119,10 @@
 当前已经补齐最小脚本面：
 
 - `myway_runtime.py`
-  - 写入 turn event / turn note / reflection packet，并生成 triage audit
+  - 写入 turn event / turn note / carry-forward candidate / reflection packet，并生成 triage audit
+  - `carry-forward candidate` 会对稳定偏好、方法模式、capability mount 规则、routing 规则和外部经验做最小分类
+  - `consolidate-carryforward` 会把 promoted candidate 合并成 durable carry-forward record
+  - `recall-carryforward` 会生成只服务当前 turn 的 bounded recall plan
 - `myway_validate.py`
   - 校验 schema、样例和 guardrails 资产
 - `myway_smoke.py`
@@ -133,7 +156,32 @@
 
 推荐接入顺序：
 
-1. 先用 `Prompt-only` 跑通 `Prelude + Postlude`
-2. 再把宿主的开始/结束或工具返回信号接到事件流
-3. 再补 reflection triage 的交换包
-4. 最后再接更细的 guardrails 和自动化发布流程
+1. 先用 `Prompt-only` 跑通 turn 前的 bounded recall、意图翻译、方法层和能力挂载层最小判断
+2. 再在 `Postlude` 后补 `carry-forward candidate`
+3. 再把 promoted candidate 合并进 durable carry-forward store
+4. 再把宿主的开始/结束或工具返回信号接到事件流
+5. 再补 reflection triage 的交换包
+6. 最后再接更细的 guardrails 和自动化发布流程
+
+## 6. 当前命令面
+
+最小命令面如下：
+
+```bash
+python scripts/myway_validate.py bundle
+python scripts/myway_smoke.py
+python scripts/myway_runtime.py finalize-turn --input-json /path/to/postlude.note.json --note-path /path/to/turn.note.json --history-path /path/to/turn.notes.history.jsonl --candidate-path /path/to/turn.carryforward.candidate.json --carryforward-log-path /path/to/turn.carryforward.log.jsonl
+python scripts/myway_runtime.py write-carryforward-candidate --note-path runtime/examples/turn.note.json --candidate-path runtime/examples/turn.carryforward.candidate.json
+python scripts/myway_runtime.py consolidate-carryforward --candidate-path runtime/examples/turn.carryforward.candidate.json --carryforward-store-path runtime/examples/carryforward.store.jsonl
+python scripts/myway_runtime.py recall-carryforward --input-json /path/to/turn.recall.input.json --carryforward-store-path runtime/examples/carryforward.store.jsonl --output-path runtime/examples/turn.carryforward.recall.json
+python scripts/myway_runtime.py triage-packet --packet-path runtime/examples/reflection.exchange.packet.json --audit-path runtime/bridge/examples/reflection-triage-audit.jsonl --turn-id turn_2026_04_17_001 --events-path runtime/examples/turn.events.jsonl --note-path runtime/examples/turn.note.json
+```
+
+如果宿主要把“回合结束”接成一个稳定 hook，优先调用 `finalize-turn`：
+
+- 输入仍然是一份 `turn.note` 结构的 JSON
+- 命令会先写 `turn.note.json`
+- 然后立即派生 `turn.carryforward.candidate.json`
+- 派生阶段会把稳定信号分类到 preference / method-pattern / capability-mount-rule / routing-rule / external-pattern 等类型
+- 如果提供 `--carryforward-log-path`，再把 `carry-forward` 结论追加到外部可写日志
+- 如果提供 `--carryforward-store-path`，再把 promoted candidate 合并到 durable carry-forward store

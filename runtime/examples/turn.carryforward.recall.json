@@ -1,0 +1,23 @@
+{
+  "schema_version": "v0.1",
+  "plan_id": "carryrecall_2026_04_17_001",
+  "query_turn_id": "turn_2026_04_17_010",
+  "query_text": "shape a new companion design with mature project guidance and bounded default helper mounts",
+  "store_record_count": 1,
+  "selected_records": [
+    {
+      "record_id": "carryrec_evolve_001",
+      "candidate_type": "external-pattern",
+      "candidate_text": "Reference mature companion projects for a boundary matrix, minimal directory layout, and the Prelude/Postlude seam.",
+      "injection_slot": "carry-over",
+      "reason": "matched recall tags: external, evolve",
+      "score": 7
+    }
+  ],
+  "recommended_method_hooks": [],
+  "recommended_capability_mounts": [],
+  "recommended_hard_constraints": [],
+  "carry_over_points": [
+    "Reference mature companion projects for a boundary matrix, minimal directory layout, and the Prelude/Postlude seam."
+  ]
+}

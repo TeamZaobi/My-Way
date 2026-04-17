@@ -1,6 +1,6 @@
 ---
 name: my-way
-description: Portable companion meta-skill surface for Codex, Claude Code, AntiGravity, and similar AI-native hosts. Defines a minimal Prelude/Postlude contract, public routing rules, and migration guidance without exposing private overlays.
+description: Portable companion meta-skill surface for Codex, Claude Code, AntiGravity, and similar AI-native hosts. Defines a minimal Prelude/Postlude contract, explicit method hooks and capability mounts, public routing rules, and migration guidance without exposing private overlays.
 ---
 
 # My-Way
@@ -17,10 +17,15 @@ It is not a private source mirror. It does not expose personalized carry-forward
 
 ## Public Contract
 
-`My-Way` does five things in public:
+`My-Way` does ten things in public:
 
+- translates compressed user intent into a bounded execution framing when needed
+- selects bounded method hooks and capability mounts when the turn needs them
 - derives one minimal `Prelude` decision before execution
 - leaves at most one short `Postlude` carry-forward note after execution
+- may derive one optional durable carry-forward candidate from that note
+- may consolidate promoted carry-forward candidates into a durable carry-forward store
+- may build one bounded recall plan from that store before the next `Prelude`
 - records append-only turn facts separately from human-readable notes
 - routes governance and lifecycle issues to the correct authority instead of absorbing them into the companion layer
 - accepts optional review material from an external reference source without assuming private system access
@@ -36,11 +41,15 @@ It is not a private source mirror. It does not expose personalized carry-forward
 
 Every turn follows the same public sequence:
 
-1. Identify the user goal, hard constraints, and active authority boundary.
-2. Produce one minimal `Prelude` outcome.
-3. Let the host execute the main task.
-4. Append one short `Postlude` note if a note is warranted.
-5. Optionally run review triage if durable material surfaced.
+1. Optionally recall a bounded set of durable carry-forward records relevant to the new turn.
+2. Identify the user goal, hard constraints, and active authority boundary.
+3. Select any bounded method hooks or capability mounts the turn actually needs.
+4. Produce one minimal `Prelude` outcome.
+5. Let the host execute the main task.
+6. Append one short `Postlude` note if a note is warranted.
+7. Optionally derive one durable carry-forward candidate if reusable context surfaced.
+8. Optionally consolidate promoted candidates into a durable carry-forward store.
+9. Optionally run review triage if durable material surfaced.
 
 `Prelude` allows only three outcomes:
 
@@ -57,6 +66,12 @@ Every turn follows the same public sequence:
 - change user intent
 - pre-empt governance or lifecycle decisions that belong elsewhere
 - add visible ritual that distracts from the host's main job
+
+When present, method hooks and capability mounts stay explicit and bounded:
+
+- a method hook is a reusable acceptance, review, or problem-solving lens for the current turn
+- a capability mount is a bounded instruction to attach a common low-level helper surface for the current turn
+- neither one changes the user's goal; they only shape how the host executes it
 
 ## Routing Model
 
@@ -83,6 +98,8 @@ The public surface uses three generic authority classes:
 ## Terminology Guardrail
 
 In this public surface, a note is a short carry-forward summary for later review. It is not a claim of personal memory or a hidden user model.
+
+A carry-forward candidate is a bounded durable-context sidecar. It can feed later review or a private overlay, but it is still not a claim of hidden user memory.
 
 Some bundled examples may still use older transport labels such as `global-candidate`, `memory`, or `*_owner`. Interpret them as compatibility encodings for wider review scope, carry-forward context material, and routing labels rather than literal public product language.
 

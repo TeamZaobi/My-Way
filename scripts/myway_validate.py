@@ -19,6 +19,18 @@ def collect_bundle_errors(root: Path) -> list[str]:
             runtime_root / "schemas" / "turn-note.schema.json",
         ),
         (
+            runtime_root / "examples" / "turn.carryforward.candidate.json",
+            runtime_root / "schemas" / "turn-carryforward-candidate.schema.json",
+        ),
+        (
+            runtime_root / "examples" / "carryforward.store.jsonl",
+            runtime_root / "schemas" / "carryforward-record.schema.json",
+        ),
+        (
+            runtime_root / "examples" / "turn.carryforward.recall.json",
+            runtime_root / "schemas" / "turn-carryforward-recall.schema.json",
+        ),
+        (
             runtime_root / "examples" / "reflection.exchange.packet.json",
             runtime_root / "schemas" / "reflection-exchange-packet.schema.json",
         ),
