@@ -97,7 +97,7 @@ Without it, a system usually drifts into one of two bad states:
 
 ## What This Public Surface Includes
 
-- thin root entry files for file-based hosts
+- thin root entry files with the minimal execution surface for file-based hosts
 - the portable turn contract
 - public terminology
 - host capability model
