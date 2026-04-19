@@ -8,6 +8,8 @@ description: Portable companion meta-skill surface for Codex, Claude Code, AntiG
 `My-Way` is a portable companion meta-skill surface for Codex, Claude Code, AntiGravity, and similar AI-native hosts. This file describes the host-facing contract of the same product in a form that a public repository can carry directly.
 
 It is not a private source mirror. It does not expose personalized carry-forward state, private operator naming, unpublished connectors, or internal release workflows.
+It defines the public contract for this repository; a host-local live install may use a linked copy or another projection.
+Stable semantics should align across surfaces, but this file does not claim that every live install is byte-identical to the public repository copy.
 
 ## When To Use It
 
@@ -17,10 +19,11 @@ It is not a private source mirror. It does not expose personalized carry-forward
 
 ## Public Contract
 
-`My-Way` does ten things in public:
+`My-Way` does eleven things in public:
 
 - translates compressed user intent into a bounded execution framing when needed
 - selects bounded method hooks and capability mounts when the turn needs them
+- may run one bounded probe-edit cycle when live tool behavior matters more than further speculation
 - derives one minimal `Prelude` decision before execution
 - leaves at most one short `Postlude` carry-forward note after execution
 - may derive one optional durable carry-forward candidate from that note
@@ -72,6 +75,62 @@ When present, method hooks and capability mounts stay explicit and bounded:
 - a method hook is a reusable acceptance, review, or problem-solving lens for the current turn
 - a capability mount is a bounded instruction to attach a common low-level helper surface for the current turn
 - neither one changes the user's goal; they only shape how the host executes it
+
+## Bounded Socratic Questioning
+
+`Socratic questioning` is an optional method hook, not a mandatory interrogation loop.
+
+Use it when:
+
+- hidden assumptions, success criteria, or authority boundaries are still unstable
+- the current plan may be optimizing the wrong problem
+- one short challenge pass is likely to reduce rework or decision risk
+
+Execution rules:
+
+- prefer one short challenge pass with only a few high-value questions
+- if the answer can be derived from repository context or stable constraints, keep the challenge internal and proceed
+- ask the user directly only when a real decision is blocked
+
+Do not let this become ritual, philosophy theater, or avoidable latency.
+
+## Bounded Probe-Edit Loop
+
+`Bounded probe-edit` is another optional method hook.
+
+Use it when:
+
+- live tool or model behavior can change the right answer materially
+- a small probe is cheaper than guessing which rewrite will work
+- the turn needs empirical signal before committing to a broader rewrite or route
+
+Execution rules:
+
+- start with the smallest useful probe
+- classify the failure mode before editing instructions
+- change one primary layer at a time when possible
+- keep one representative failure and one current best result for comparison
+- if the same failure repeats twice, consider rerouting or rewriting the structure instead of adding more local clauses
+
+Do not let this become blind batch running, endless polishing, or fake certainty from noisy samples.
+
+## Visual Routing Guardrail
+
+When the turn becomes a multi-pass visual-production task, `My-Way` should not absorb the full image workflow into the companion layer.
+
+Its public role is only to:
+
+- identify that the task belongs to a dedicated visual or image skill
+- route toward that specialized skill, defaulting to `visual-prompt-router` when the host has it installed
+- keep a few high-level guardrails active
+
+Public guardrails for visual turns:
+
+- do not overwrite approved outputs before acceptance
+- keep browser-based image runs serialized by default
+- only run `Web + CLI` in parallel when the user explicitly permits parallel lanes
+- for structure-heavy outputs such as mechanism pages or triptychs, prefer structural correctness over mood if both cannot be preserved at once
+- for structure-heavy or text-heavy outputs, prefer one small probe cycle before scaling into a larger batch
 
 ## Routing Model
 

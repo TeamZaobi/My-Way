@@ -75,8 +75,10 @@ Purpose:
 
 - select reusable acceptance, review, or problem-solving hooks for the current turn
 - keep those hooks explicit instead of hiding them in ad hoc prompt expansion
+- allow bounded `Socratic questioning` when hidden assumptions, unstable constraints, or a weak plan need one short challenge pass
 
 The method layer does not create a new task. It only chooses a reusable working lens.
+When possible, that challenge should stay internal to the host rather than forcing extra user-facing questioning.
 
 ### 3.5 Capability Mount Layer
 
