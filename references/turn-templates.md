@@ -31,12 +31,19 @@ prelude:
   - 当前最适合执行的动作
 - `method_hooks`
   - 最多 3 条；只写这一轮真正要挂上的验收 / 审核 / 解题方法钩子
+  - 例如 `socratic-questioning`、`acceptance-rubric`、`anti-pattern-check`
 - `capability_mounts`
   - 最多 3 条；只写这一轮真正需要默认挂载的底层能力面
 - `hard_constraints`
   - 最多 3 条；只保留不能丢的边界
 - `owner`
   - 明确这一轮谁主导
+
+Supplemental rule:
+
+- If `method_hooks` includes `socratic-questioning`
+  - only use it when assumptions, constraint ordering, or problem framing are unstable
+  - keep it to one short pass with 1-3 high-value questions unless the host can resolve the challenge internally
 
 ## 2. Handoff note template
 
@@ -120,6 +127,7 @@ carryforward_candidate:
     - 长期约束、不可越过的 guardrail
   - `method-pattern`
     - 能迁移到后续回合的验收 rubric、审核方法、解题 playbook 或思维模型
+    - 例如 bounded `socratic-questioning`, anti-pattern checks, or a stable challenge order
   - `capability-mount-rule`
     - 进入同类任务时应默认挂载的通用能力挂件或能力面
   - `workflow-pattern`
