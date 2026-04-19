@@ -9,7 +9,7 @@
 
 ```yaml
 prelude:
-  mode: rewrite-light | bypass | observe-only
+  mode: execute | bypass | observe-only
   user_goal: string
   action_focus: string
   method_hooks:
@@ -18,13 +18,18 @@ prelude:
     - string
   hard_constraints:
     - string
-  owner: my-way | host | governance-owner | lifecycle-owner
+  owner: my-way | host | governance-authority | lifecycle-authority
 ```
 
 字段规则：
 
 - `mode`
-  - 三选一，不允许混合状态
+  - `execute`
+    - 请求可直接执行且当前安全
+  - `bypass`
+    - 已有更强 workflow 覆盖这一轮，不需要额外 companion ceremony
+  - `observe-only`
+    - 当前只做分析、评审、核验，不落地编辑
 - `user_goal`
   - 只复述用户真正要解决的问题，不扩写新任务
 - `action_focus`
@@ -44,7 +49,7 @@ prelude:
 
 ```yaml
 handoff_note:
-  target: governance-owner | lifecycle-owner
+  target: governance-authority | lifecycle-authority
   reason: string
   my_way_role: observe | context-pack | note
   carry_over:
@@ -54,7 +59,7 @@ handoff_note:
 字段规则：
 
 - `target`
-  - 只允许单 owner
+  - 只允许单 authority
 - `reason`
   - 说清为什么这不是 `My-Way` 主责
 - `my_way_role`
@@ -225,7 +230,7 @@ reflection_triage:
 - `rationale`
   - 说明为什么吸收、保留分歧或回送候选
 - `follow_up_owner`
-  - 只有涉及实际资产修改时才交给 `governance-owner` 或 `lifecycle-owner`
+  - 兼容字段；只有涉及实际资产修改时才交给对应的 governance / lifecycle authority
 
 ## 8. Stop rules
 

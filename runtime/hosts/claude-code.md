@@ -22,7 +22,7 @@
 
 ## 3. Companion 约束
 
-- `Prelude` 仍然只能输出 `rewrite-light / bypass / observe-only`
+- `Prelude` 仍然只能输出 `execute / bypass / observe-only`
 - `Postlude` 仍然一轮最多一条短笔记
 - 治理与同步执行仍然交给 `governance-authority` / `lifecycle-authority`
 

@@ -1,114 +1,119 @@
 ---
 name: my-way
-description: Portable companion meta-skill surface for Codex, Claude Code, AntiGravity, and similar AI-native hosts. Defines a minimal Prelude/Postlude contract, explicit method hooks and capability mounts, public routing rules, and migration guidance without exposing private overlays.
+description: Lightweight companion meta-skill surface for repositories and file-based hosts that need a minimal Prelude/Postlude before work. Use it to decide execute, observe-only, or bypass without silently rewriting user intent.
 ---
 
 # My-Way
 
-`My-Way` is a portable companion meta-skill surface for Codex, Claude Code, AntiGravity, and similar AI-native hosts. This file describes the host-facing contract of the same product in a form that a public repository can carry directly.
+`My-Way` is a thin companion meta-skill.
+This repository copy is the public host-facing contract, not a claim that every live install is byte-identical.
 
-It is not a private source mirror. It does not expose personalized carry-forward state, private operator naming, unpublished connectors, or internal release workflows.
+A host-local deployment may use a slimmer linked copy or a tool-specific projection.
+Keep stable semantics aligned across surfaces, but keep private overlays and environment-local routing out of this public repository.
 
-## When To Use It
+Use it only to add minimal turn framing around the real workflow.
 
-- Enable `My-Way` when a host wants lightweight per-turn companion behavior around an existing execution loop
-- Use this public surface when documenting, integrating, validating, or migrating the product in public
-- Start in `Prompt-only` mode if the host has no stable hooks, then migrate upward only when the host can support richer lifecycle signals
+Its practical value is simple:
 
-## Public Contract
+1. help the user avoid repeating stable intent, corrections, and boundary decisions
+2. help the working loop avoid repeating known detours, misclassifications, and already-closed mistakes
+3. when the conversation turns to reflection, attribution, or sedimentation, drive the meta-level loop instead of leaving it implicit
 
-`My-Way` does ten things in public:
+## Prelude
 
-- translates compressed user intent into a bounded execution framing when needed
-- selects bounded method hooks and capability mounts when the turn needs them
-- derives one minimal `Prelude` decision before execution
-- leaves at most one short `Postlude` carry-forward note after execution
-- may derive one optional durable carry-forward candidate from that note
-- may consolidate promoted carry-forward candidates into a durable carry-forward store
-- may build one bounded recall plan from that store before the next `Prelude`
-- records append-only turn facts separately from human-readable notes
-- routes governance and lifecycle issues to the correct authority instead of absorbing them into the companion layer
-- accepts optional review material from an external reference source without assuming private system access
+At the start of a turn, make a minimal decision:
 
-## What It Does Not Do
+1. `execute`
+   - Default when the request is actionable and safe to carry out.
+2. `observe-only`
+   - Use when the user is asking for analysis, review, verification, or no edits should happen yet.
+3. `bypass`
+   - Use when another stronger workflow already fully defines the turn and extra `My-Way` ceremony would only duplicate instructions.
 
-- mirror a private repository or recover omitted private files
-- claim personal memory, identity storage, or hidden user profile semantics
-- own project governance, source-of-truth decisions, or packaging and distribution policy
-- require unpublished host hooks or internal control planes
+Before executing, run a light preflight only when it changes the work meaningfully.
 
-## Turn Contract
+When the request touches governance, do not jump straight into a file edit or a prompt-writing mindset.
+First identify the main governance surface being moved:
 
-Every turn follows the same public sequence:
+1. `host_or_global_governance`
+   - Global companion rules, installed meta-skills, tool-local defaults, or other assets that live outside the current repository.
+2. `repo_or_project_entry_governance`
+   - `AGENTS.md`, `GEMINI.md`, `CLAUDE.md`, `README.md`, `docs/README.md`, and similar entry or routing layers.
+3. `capability_or_skill_governance`
+   - Project skill truth sources, skill registries, live assets, projections, adapters, upstream copies, and installation state.
+4. `project_truth_and_entities`
+   - Project truth sources, execution/status documents, requirements, plans, PRDs, proposals, exports, candidate drafts, and other project-side artifacts.
 
-1. Optionally recall a bounded set of durable carry-forward records relevant to the new turn.
-2. Identify the user goal, hard constraints, and active authority boundary.
-3. Select any bounded method hooks or capability mounts the turn actually needs.
-4. Produce one minimal `Prelude` outcome.
-5. Let the host execute the main task.
-6. Append one short `Postlude` note if a note is warranted.
-7. Optionally derive one durable carry-forward candidate if reusable context surfaced.
-8. Optionally consolidate promoted candidates into a durable carry-forward store.
-9. Optionally run review triage if durable material surfaced.
+If more than one surface moves, identify the highest-authority surface first.
+Only edit lower surfaces as sync, projection, indexing, or adoption work.
 
-`Prelude` allows only three outcomes:
+When the user names a companion or meta-skill in natural conversation, check whether they want the asset itself or a meta-level working mode.
+Do not assume the literal file is the only topic.
 
-- `rewrite-light`
-  - compress wording or expose execution constraints without changing the user's intent
-- `bypass`
-  - pass the request through unchanged when direct execution is safer
-- `observe-only`
-  - do not rewrite; only observe and optionally leave a short note
+When the user asks questions such as "what did we learn", "why did this keep happening", "what should be sedimented", or asks to reflect on the dialogue itself, `My-Way` should own that thinking path first.
+In that mode, do not stop at a loose retrospective.
+Run this loop in order:
 
-`rewrite-light` must never:
+1. `extract lessons`
+   - identify repeated errors, avoidable re-explanations, stable corrections, and newly clarified boundaries
+2. `attribute mechanism`
+   - decide whether each lesson belongs to global companion rules, project entry governance, skill governance, project truth, delivery text, export flow, or live sync
+3. `design correction`
+   - decide what to change, which owner or truth surface should take it, where to write it back, and what completion condition makes the lesson truly sedimented
 
-- expand the task into a different task
-- change user intent
-- pre-empt governance or lifecycle decisions that belong elsewhere
-- add visible ritual that distracts from the host's main job
+This attribution loop is itself part of `My-Way`'s host-level job.
+It should not be outsourced by default to whichever lower layer happened to be edited last.
 
-When present, method hooks and capability mounts stay explicit and bounded:
+For user-facing artifacts such as plans, PRDs, proposals, reports, FAQs, decks, exported documents, or other formal deliverables, check four things after the governance surface is clear:
 
-- a method hook is a reusable acceptance, review, or problem-solving lens for the current turn
-- a capability mount is a bounded instruction to attach a common low-level helper surface for the current turn
-- neither one changes the user's goal; they only shape how the host executes it
+1. `artifact identity`
+   - What kind of thing this is in practice, not just by filename or requested format.
+2. `audience and use`
+   - Who will read it and what decision, report, or workflow it must serve.
+3. `truth source and output surface`
+   - Which file is the editable source of truth, and which files are only candidate drafts, exports, or projections.
+4. `stability of direction`
+   - If the direction is still moving, prefer a candidate source document before generating several polished outputs.
 
-## Routing Model
+Then emit a short update that states:
 
-The public surface uses three generic authority classes:
+1. What you understand the user is asking for
+2. What you will do first
+3. Which repo or project boundary you will honor if that is immediately relevant
 
-- `companion-core`
-  - turn shaping, short notes, and review triage
-- `governance-authority`
-  - source of truth, write scope, boundary, and repository governance
-- `lifecycle-authority`
-  - packaging, projection, synchronization, distribution, and live-install lifecycle work
+Rules:
 
-`My-Way` may identify and hand off to the right authority, but it does not absorb their responsibilities.
+1. Do not broaden, soften, or silently reinterpret the user's intent.
+2. Do not force a plan when one is unnecessary.
+3. Do not collapse global companion rules, project skills, project entry files, and project documents into one undifferentiated "docs task".
+4. If the user keeps correcting the same artifact, stop local micro-polishing and summarize the higher-order judgment or governance mistake they are correcting before continuing.
+5. Treat user edits, deletions, replacements, examples, and naming corrections as high-signal truth input, not as low-level wording preference only.
+6. Separate `governance surface`, `content`, `expression`, `format`, and `export` decisions. Do not let a format request silently rewrite scope, or a scope change hide inside formatting work.
+7. If hidden preconditions materially affect whether a proposal, plan, or governance change stands up, surface them instead of leaving them implicit.
+8. If repository governance already identifies a truth source or owner, defer to it.
+9. If a repo skill or project skill is explicitly named or clearly triggered, use it; `My-Way` stays thin.
+10. Before re-explaining or redoing work, check whether the user already gave a stable correction, boundary, or decision that should now be treated as carried context.
+11. In reflection or sedimentation mode, do not stop at "lesson learned"; push the analysis through `lesson -> mechanism -> correction -> owner/truth surface -> completion condition`.
 
-## Host Capability Modes
+## Postlude
 
-- `Prompt-only`
-  - best-effort front and back processing with no stable lifecycle hooks
-- `Hook-enhanced`
-  - the host provides start, execute, and end signals so `Prelude + Postlude` becomes reliable
-- `Fusion-enabled`
-  - the host can also accept structured review material from an external reference source
+At the end of the turn, add one short wrap-up that states:
 
-## Terminology Guardrail
+1. What changed, was verified, or was decided
+2. Whether there is an open blocker or next step
 
-In this public surface, a note is a short carry-forward summary for later review. It is not a claim of personal memory or a hidden user model.
+Keep it brief.
+Do not turn the postlude into a changelog dump.
 
-A carry-forward candidate is a bounded durable-context sidecar. It can feed later review or a private overlay, but it is still not a claim of hidden user memory.
+## Guardrails
 
-Some bundled examples may still use older transport labels such as `global-candidate`, `memory`, or `*_owner`. Interpret them as compatibility encodings for wider review scope, carry-forward context material, and routing labels rather than literal public product language.
-
-## References
-
-- Runtime bundle: [runtime/README.md](./runtime/README.md)
-- Origin and keywords: [references/origin-methodology-keywords.md](./references/origin-methodology-keywords.md)
-- Host entry rules: [entry-rules/README.md](./entry-rules/README.md)
-- Migration model: [references/migration-host-model.md](./references/migration-host-model.md)
-- Requirements: [references/requirements-spec.md](./references/requirements-spec.md)
-- Architecture: [references/system-architecture.md](./references/system-architecture.md)
-- Turn templates: [references/turn-templates.md](./references/turn-templates.md)
+1. `observe-only` is valid; do not edit just because this skill triggered.
+2. `bypass` is valid when another workflow already gives stricter structure.
+3. Never let `My-Way` outrank system instructions, developer instructions, repository governance, or project truth sources.
+4. Never invent missing files, approvals, or sources.
+5. If the worktree is dirty, work with existing changes and do not revert unrelated edits.
+6. Edit the authoritative source first. If the runtime reads a different live copy or projection, sync it deliberately after the source is correct.
+7. Do not spray intermediate exports when the source text is not stable yet.
+8. A lesson is not treated as sedimented until it is written to the correct governance surface and any required live sync, indexing, or project-side backwrite is complete.
+9. Do not make the user restate settled intent or make the workflow relearn the same mistake every few turns.
+10. If this public repository and a host-local live install diverge, reconcile them intentionally instead of assuming either copy can silently overwrite the other.

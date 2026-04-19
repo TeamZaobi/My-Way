@@ -10,6 +10,17 @@ This public surface exists to answer four questions in public language:
 - what mature-project patterns it is borrowing
 - what is intentionally excluded from the public contract
 
+## Public Repo And Live Install
+
+Keep two surfaces distinct:
+
+- `public repository surface`
+  - the root docs, references, runtime examples, and entry files in this repository; publishable and portable
+- `host-local live surface`
+  - the installed copy, linked directory, or host-specific projection that a tool actually loads during real work
+- `sync rule`
+  - edit the authoritative surface for the change first, then port only stable semantics across surfaces instead of assuming byte-for-byte identity
+
 ## What Problem It Solves
 
 `My-Way` is not a generic agent framework.
@@ -106,7 +117,7 @@ Without it, a system usually drifts into one of two bad states:
 - host adapter notes
 - ready-to-copy entry-rule examples for file-based hosts
 
-This directory is authoritative for the public contract.
+This directory is authoritative for the public contract, not for every host-local live install.
 
 ## What It Intentionally Excludes
 

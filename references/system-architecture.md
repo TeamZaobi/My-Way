@@ -162,7 +162,7 @@ idle -> carry-forward-recall -> prelude(intent-translation / method-select / cap
 - `carry-forward-recall`
   - retrieve a bounded subset of durable records for the next turn
 - `prelude`
-  - choose `rewrite-light`, `bypass`, or `observe-only`, and attach any bounded method hooks or capability mounts
+  - choose `execute`, `bypass`, or `observe-only`, and attach any bounded method hooks or capability mounts
 - `execute`
   - the host performs the main task
 - `postlude`

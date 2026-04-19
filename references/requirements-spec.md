@@ -44,7 +44,7 @@ If a detail is required only to reconstruct a private source tree, it is out of 
 Each turn follows a portable nine-step sequence:
 
 1. optionally recall a bounded set of durable carry-forward records for the new turn
-2. determine the user goal, hard constraints, and active authority boundary
+2. determine the user goal, hard constraints, and active governance surface
 3. select any bounded method hooks or capability mounts the turn actually needs
 4. produce one minimal `Prelude` outcome
 5. let the host execute the main task
@@ -55,18 +55,19 @@ Each turn follows a portable nine-step sequence:
 
 ### 4.1 Prelude Outcomes
 
-- `rewrite-light`
-  - clarify or compress wording without changing user intent
+- `execute`
+  - the request is actionable and safe to carry out
 - `bypass`
-  - pass through unchanged when direct execution is safer
+  - another stronger workflow already defines the turn and extra companion ceremony would only duplicate it
 - `observe-only`
-  - do not rewrite; only observe and optionally note
+  - no edits should happen yet; analyze, review, or verify only
 
 ### 4.2 Method Hooks And Capability Mounts
 
 - method hooks are explicit reusable lenses such as acceptance rubrics, review patterns, or problem-solving playbooks
 - capability mounts are explicit reusable helper surfaces such as default search, comparison, validation, or retrieval helpers
 - both must stay bounded to the current turn and must not change the user's goal
+- light preflight is allowed only when it changes the work meaningfully
 
 ### 4.3 Durable Carry-Forward And Recall
 
@@ -83,6 +84,7 @@ Each turn follows a portable nine-step sequence:
 - compact carry-forward notes by default
 - carry-forward candidates stay separate from human-readable notes
 - graceful fallback when hosts lack strong hooks
+- edit the authoritative surface first and sync lower projections deliberately
 
 ## 5. Authority Model
 
@@ -170,6 +172,7 @@ The public surface must support three migration directions:
 Migration must preserve these rules:
 
 - public docs stay authoritative for the public contract
+- host-local live installs may keep a separate execution-oriented source of truth
 - private overlays remain optional and out-of-tree
 - migration adds public capability; it does not reconstruct private implementation details
 - host bootstrap may begin from `entry-rules/`, but those files stay thin and defer to `SKILL.md`
