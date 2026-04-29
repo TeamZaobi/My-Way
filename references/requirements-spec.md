@@ -10,6 +10,7 @@ This public surface is meant to stand on its own inside a public repository. It 
 
 - reduce repeated explanation cost by translating compressed user intent into a bounded execution framing
 - expose reusable method hooks and capability mounts explicitly instead of hiding them in ad hoc prompts
+- expose bounded `Socratic questioning` as one reusable method hook when assumptions, framing, or tradeoffs need challenge
 - keep one stable per-turn contract across supported hosts
 - separate short notes, durable carry-forward records, and bounded recall plans
 - let public adopters start in `Prompt-only` mode and migrate toward stronger host integration
@@ -65,8 +66,10 @@ Each turn follows a portable nine-step sequence:
 ### 4.2 Method Hooks And Capability Mounts
 
 - method hooks are explicit reusable lenses such as acceptance rubrics, review patterns, or problem-solving playbooks
+- method hooks may include bounded `Socratic questioning` when the host needs to surface hidden assumptions or challenge a weak plan before execution
 - capability mounts are explicit reusable helper surfaces such as default search, comparison, validation, or retrieval helpers
 - both must stay bounded to the current turn and must not change the user's goal
+- edit the authoritative surface first and sync lower projections deliberately when the same product appears in more than one exposure layer
 
 ### 4.3 Durable Carry-Forward And Recall
 
@@ -80,6 +83,7 @@ Each turn follows a portable nine-step sequence:
 - proposal before high-impact mutation
 - one active authority boundary per mixed issue
 - method hooks and capability mounts stay explicit rather than being hidden in opaque prompt expansion
+- `Socratic questioning`, when selected, stays low-noise and should not become a mandatory multi-turn ritual
 - compact carry-forward notes by default
 - carry-forward candidates stay separate from human-readable notes
 - graceful fallback when hosts lack strong hooks
@@ -170,6 +174,7 @@ The public surface must support three migration directions:
 Migration must preserve these rules:
 
 - public docs stay authoritative for the public contract
+- host-local live installs may keep a separate execution-oriented source of truth
 - private overlays remain optional and out-of-tree
 - migration adds public capability; it does not reconstruct private implementation details
 - host bootstrap may begin from `entry-rules/`, but those files stay thin and defer to `SKILL.md`

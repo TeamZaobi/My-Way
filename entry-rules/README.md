@@ -21,6 +21,7 @@ Use these files as bootstrap loaders, not as alternate product truth. The full p
 
 1. Copy the matching file to the repository root used by the target host.
 2. Keep the entry file minimal: default-load `SKILL.md`, keep the minimal execution surface, and do not silently rewrite the user's intent.
-3. Point any deeper semantics back to `SKILL.md` and the reference docs instead of duplicating them inline.
-4. If multiple tools share the same repository, it is acceptable to keep more than one entry file at the root as long as they carry the same public contract.
-5. If a host has no file-based repository entrypoint, port `GENERIC-HOST.md` into its host-native project instruction mechanism.
+3. Decide constraint strength before placement: entry files should carry only thin early-binding guardrails, while method, boundary, and contract rules belong deeper.
+4. Point any deeper semantics back to `SKILL.md` and the reference docs instead of duplicating them inline.
+5. If multiple tools share the same repository, it is acceptable to keep more than one entry file at the root as long as they carry the same public contract.
+6. If a host has no file-based repository entrypoint, port `GENERIC-HOST.md` into its host-native project instruction mechanism.

@@ -1,4 +1,6 @@
-# My-Way Public Surface
+# My-Way Public Surface · 绸缪
+
+`绸缪` is the Chinese display name currently used for `My-Way` in GitHub-facing README copy.
 
 `My-Way` in this directory is the public projection of the same product.
 It is meant to be carried by a public repository directly, but it should still express the product clearly, not just list exported files.
@@ -10,6 +12,17 @@ This public surface exists to answer four questions in public language:
 - what mature-project patterns it is borrowing
 - what is intentionally excluded from the public contract
 
+## Public Repo And Live Install
+
+Keep two surfaces distinct:
+
+- `public repository surface`
+  - the root docs, references, runtime examples, and entry files in this repository; publishable and portable
+- `host-local live surface`
+  - the installed copy, linked directory, or host-specific projection that a tool actually loads during real work
+- `sync rule`
+  - edit the authoritative surface for the change first, then port only stable semantics across surfaces instead of assuming byte-for-byte identity
+
 ## What Problem It Solves
 
 `My-Way` is not a generic agent framework.
@@ -18,6 +31,7 @@ It is a portable companion layer for AI-native hosts such as Codex, Claude Code,
 Its real job is to reduce a few recurring costs that show up in long-running human and AI collaboration:
 
 - repeated explanation of compressed intent, boundary, and default assumptions
+- repeated failure to challenge weak assumptions or misframed problems without turning every turn into an interrogation
 - repeated teaching of review style, acceptance method, and problem-solving heuristics
 - repeated reminders to mount common low-level helper capabilities
 - repeated loss of stable context across turns and across hosts
@@ -55,13 +69,48 @@ The point is to adopt the stable patterns underneath:
 
 This public surface therefore exposes the method, not the private working state.
 
+## One Upstream Judgment
+
+Before deciding between a global entry file, a global skill, a project entry file, or a project skill, `My-Way` now asks one upstream question first:
+
+how hard does this constraint actually need to be.
+
+That is a strength judgment, not a scope judgment.
+
+Default mapping:
+
+- `thin reminder`
+  - default loading, routing, and a few high-level guardrails
+  - usually belongs in an entry file
+- `method rule`
+  - how to interpret, execute, review, or accept the work
+  - usually belongs in the skill or method layer
+- `boundary rule`
+  - source of truth, write scope, overwrite policy, and escalation points
+  - usually belongs in project rules or governance handling
+- `contract rule`
+  - required inputs, outputs, gates, validation, replay, or audit semantics
+  - usually belongs in workflow, schema, or validator surfaces
+
+The point of this precheck is simple:
+
+- judge strength first, then choose the carrier
+
+Default guardrails:
+
+- broader scope does not mean a rule should be harder
+- the more global the layer, the thinner it should stay
+- rules get harder only as they move closer to project truth, write scope, and acceptance
+- contract-level requirements should not remain disguised as entry-file text or skill prose
+
 ## Public Operating Model
 
 The public product model is now:
 
 1. optionally recall a bounded slice of durable carry-forward context before a new turn
 2. translate compressed user intent into a bounded execution framing
-3. choose reusable method hooks and capability mounts for the turn
+3. run one bounded constraint-strength check, then choose reusable method hooks and capability mounts for the turn
+   including bounded `Socratic questioning` when assumptions or tradeoffs need one short challenge pass
 4. let the host execute the main task
 5. emit one short `Postlude` note when warranted
 6. derive an optional durable carry-forward candidate
@@ -72,6 +121,9 @@ This is the main public idea:
 
 carry-forward should not collapse into raw logs.
 It should be layered, typed, and bounded.
+
+In this public model, `Socratic questioning` is a method hook, not a default conversation style.
+It should surface hidden assumptions or weak tradeoffs with minimal noise, and it should stay internal whenever the host can resolve the challenge from existing context.
 
 ## Public Memory Position
 
@@ -106,7 +158,7 @@ Without it, a system usually drifts into one of two bad states:
 - host adapter notes
 - ready-to-copy entry-rule examples for file-based hosts
 
-This directory is authoritative for the public contract.
+This directory is authoritative for the public contract, not for every host-local live install.
 
 ## What It Intentionally Excludes
 

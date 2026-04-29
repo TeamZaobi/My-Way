@@ -1,23 +1,35 @@
 {
   "schema_version": "v0.1",
-  "plan_id": "carryrecall_2026_04_17_001",
-  "query_turn_id": "turn_2026_04_17_010",
-  "query_text": "shape a new companion design with mature project guidance and bounded default helper mounts",
-  "store_record_count": 1,
+  "plan_id": "carryrecall_2026_04_18_001",
+  "query_turn_id": "turn_2026_04_18_010",
+  "query_text": "decide whether a multi-pass visual task should route to visual-prompt-router and keep only the minimum guardrails in companion scope",
+  "store_record_count": 3,
   "selected_records": [
     {
-      "record_id": "carryrec_evolve_001",
-      "candidate_type": "external-pattern",
-      "candidate_text": "Reference mature companion projects for a boundary matrix, minimal directory layout, and the Prelude/Postlude seam.",
+      "record_id": "carryrec_visual_routing_001",
+      "candidate_type": "routing-rule",
+      "candidate_text": "When a turn becomes a multi-pass visual-production task, route it to `visual-prompt-router` by default when the host has it installed; only fall back to another dedicated visual or image skill when it is unavailable or clearly not the right fit. Do not expand a full image workflow inside the companion layer.",
       "injection_slot": "carry-over",
-      "reason": "matched recall tags: external, evolve",
-      "score": 7
+      "reason": "matched recall tags: image, visual, routing, skill",
+      "score": 12
+    },
+    {
+      "record_id": "carryrec_visual_guardrail_001",
+      "candidate_type": "constraint",
+      "candidate_text": "For visual turns, keep only high-level guardrails in the companion layer: do not overwrite approved outputs before acceptance, keep browser runs serialized unless the user explicitly allows parallel lanes, and preserve structural correctness first for structure-heavy deliverables.",
+      "injection_slot": "hard-constraints",
+      "reason": "matched recall tags: visual, guardrail, overwrite, parallel, structure",
+      "score": 11
     }
   ],
   "recommended_method_hooks": [],
   "recommended_capability_mounts": [],
-  "recommended_hard_constraints": [],
+  "recommended_hard_constraints": [
+    "Do not overwrite approved outputs before acceptance.",
+    "Keep browser image runs serialized unless the user explicitly allows parallel lanes.",
+    "Prefer structural correctness over atmosphere for triptychs, mechanism pages, and sheet layouts."
+  ],
   "carry_over_points": [
-    "Reference mature companion projects for a boundary matrix, minimal directory layout, and the Prelude/Postlude seam."
+    "When a turn becomes a multi-pass visual-production task, route it to `visual-prompt-router` by default when the host has it installed; only fall back to another dedicated visual or image skill when it is unavailable or clearly not the right fit. Do not expand a full image workflow inside the companion layer."
   ]
 }
