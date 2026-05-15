@@ -1,27 +1,10 @@
 # Host Entry Rules
 
-This directory provides ready-to-copy repository entry files for file-based AI-native hosts.
+This directory is archived.
 
-The repository root now ships the same thin entry files directly. Keep the copies here for downstream repositories and host-native settings.
+The files here are retained only to show the former host bootstrap shape. Do
+not copy them into new repositories, do not install them into host-global
+instruction surfaces, and do not use them to activate `My-Way`.
 
-Use these files as bootstrap loaders, not as alternate product truth. The full product contract still lives in `../SKILL.md`, `../references/requirements-spec.md`, and `../references/migration-host-model.md`.
-
-## File Matrix
-
-- `AGENTS.md`
-  - for Codex and other hosts that read `AGENTS.md` from the repository root or subtree
-- `CLAUDE.md`
-  - for Claude Code repositories
-- `GEMINI.md`
-  - for Gemini CLI repositories
-- `GENERIC-HOST.md`
-  - for hosts that support a repository instruction file but use a different filename or settings surface
-
-## Usage Rules
-
-1. Copy the matching file to the repository root used by the target host.
-2. Keep the entry file minimal: default-load `SKILL.md`, keep the minimal execution surface, and do not silently rewrite the user's intent.
-3. Decide constraint strength before placement: entry files should carry only thin early-binding guardrails, while method, boundary, and contract rules belong deeper.
-4. Point any deeper semantics back to `SKILL.md` and the reference docs instead of duplicating them inline.
-5. If multiple tools share the same repository, it is acceptable to keep more than one entry file at the root as long as they carry the same public contract.
-6. If a host has no file-based repository entrypoint, port `GENERIC-HOST.md` into its host-native project instruction mechanism.
+`My-Way` has been closed because host tools now provide stronger native memory
+management, project instructions, and context-continuity support.
