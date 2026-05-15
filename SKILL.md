@@ -1,9 +1,11 @@
 ---
 name: my-way
-description: Portable companion meta-skill surface for Codex, Claude Code, AntiGravity, and similar AI-native hosts. Defines a minimal Prelude/Postlude contract, explicit method hooks and capability mounts, public routing rules, and migration guidance without exposing private overlays.
+description: Archived public companion meta-skill surface. My-Way is closed and should no longer be installed or activated as a default cross-tool companion skill.
 ---
 
 # My-Way
+
+> Archived: `My-Way` is closed. Host tools have improved native memory management, project instruction, and context-continuity capabilities, so this project is retained only as historical reference and should not be used as a live skill entry.
 
 `My-Way` is a portable companion meta-skill surface for Codex, Claude Code, AntiGravity, and similar AI-native hosts. This file describes the host-facing contract of the same product in a form that a public repository can carry directly.
 

@@ -1,5 +1,13 @@
 # My-Way Public Surface · 绸缪
 
+## Project Closed
+
+`My-Way` is closed and should no longer be installed or activated as a cross-tool companion skill.
+
+The project is closing because host tools such as `Codex`, `Claude Code`, and `Gemini / AntiGravity` have improved their native memory management, project instruction, and context-continuity capabilities. The always-on memory and companion-adapter responsibilities that originally justified `My-Way` no longer need a separately maintained project.
+
+This repository remains available only as historical reference and archived design material. It is no longer a default skill entry, cross-tool adapter surface, or active feature-development line.
+
 `绸缪` is the Chinese display name currently used for `My-Way` in GitHub-facing README copy.
 
 `My-Way` in this directory is the public projection of the same product.
